@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
     <title>Pikatchu Prices (aka. PP)</title>
     <script>
         async function fetchData() {
@@ -23,11 +24,23 @@
             // Insert rows into the table
             document.getElementById('priceTableBody').innerHTML = tableRows;
         }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('Service Worker registered:', registration);
+                })
+                .catch((error) => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+
     </script>
 </head>
 
 <body onload="fetchData()">
-
+    <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" width="350" alt="Pikachu" />
+    </a>
     <h1>Electricity Prices for Next 48 Hours</h1>
     <table border="1">
         <thead>
