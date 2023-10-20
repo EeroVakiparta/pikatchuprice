@@ -59,8 +59,12 @@ export class PikatchupriceStack extends cdk.Stack {
     // Create a new Lambda function for notifications
     const notifyLambda = new lambda.Function(this, 'notifyFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
-      handler: 'notify.handler',
+      handler: 'sendNotification.handler',
       code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
+        VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || ''
+      }
     });
 
     // Schedule the Lambda function to run every hour

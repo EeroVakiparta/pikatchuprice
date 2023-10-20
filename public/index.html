@@ -58,17 +58,19 @@
         // Add this JavaScript code to handle button click
         document.getElementById('subscribeButton').addEventListener('click', function () {
             if ('serviceWorker' in navigator) {
-                // Register the service worker and subscribe
                 navigator.serviceWorker.register('sw.js').then(registration => {
-                    return registration.pushManager.requestPermission().then(() => {
-                        return registration.pushManager.getSubscription();
+                    return Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            return registration.pushManager.getSubscription();
+                        } else {
+                            throw new Error('Permission not granted for Notification');
+                        }
                     }).then(subscription => {
                         if (subscription) {
                             return subscription;
                         }
 
-                        // Subscribe for push notifications
-                        const applicationServerKey = urlB64ToUint8Array(BDpwQcSAieOuATojYHthzD4cExNIYS9571KxDdXkQrlR3GZV2cq3nBnHYSNWPuzZOCln9D7SK_eDbd9NvFdv1lE);
+                        const applicationServerKey = urlB64ToUint8Array('BDpwQcSAieOuATojYHthzD4cExNIYS9571KxDdXkQrlR3GZV2cq3nBnHYSNWPuzZOCln9D7SK_eDbd9NvFdv1lE');
                         return registration.pushManager.subscribe({
                             userVisibleOnly: true,
                             applicationServerKey: applicationServerKey
@@ -76,7 +78,10 @@
                     });
                 }).then(subscription => {
                     console.log(JSON.stringify(subscription));
+                }).catch(error => {
+                    console.log('Failed to subscribe the user: ', error);
                 });
+
             } else {
                 console.log('Service workers are not supported.');
             }
