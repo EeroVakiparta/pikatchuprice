@@ -7,8 +7,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
-
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 
 export class PikatchupriceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -28,9 +27,23 @@ export class PikatchupriceStack extends cdk.Stack {
 
     websiteBucket.addToResourcePolicy(bucketPolicy);
 
+    // Create a CloudFront distribution
+    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MyDistribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: websiteBucket,
+          },
+          behaviors: [{ isDefaultBehavior: true }],
+        },
+      ],
+    });
+
+    // Update your existing BucketDeployment to include the distribution
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset('./public')],
       destinationBucket: websiteBucket,
+      distribution,
     });
 
     const fetchPricesLambda = new lambda.Function(this, 'fetchPricesFunction', {
