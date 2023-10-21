@@ -29,6 +29,8 @@
             // Extract datetime and price data from the JSON
             const datetime = data.map(entry => new Date(entry.datetime));
             const prices = data.map(entry => entry.price);
+            // Get the current time
+            const currentTime = new Date();
 
             // Create a bar chart
             const ctx = document.getElementById('priceChart').getContext('2d');
@@ -39,7 +41,15 @@
                     datasets: [{
                         label: 'Electricity Prices',
                         data: prices,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Set a single color
+                        backgroundColor: datetime.map((dt) => {
+                            // Check if the datetime matches the current time
+                            if (dt.getHours() === currentTime.getHours() && dt.getDate() === currentTime.getDate()) {
+                                // If it's the current time, set a different color
+                                return 'rgba(0, 255, 0, 0.6)'; // Red color
+                            } else {
+                                return 'rgba(75, 192, 192, 0.2)'; // Default color
+                            }
+                        }),
                         borderWidth: 1,
                     }],
                 },
