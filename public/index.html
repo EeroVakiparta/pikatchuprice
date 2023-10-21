@@ -13,7 +13,7 @@
 <body onload="fetchData()">
     <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" width="350" alt="Pikachu" />
     <a href="https://github.com/Vakiopartaeero/pikachu">
-      <h1>Electricity Prices for Next 48 Hours</h1>
+        <h1>Electricity Prices for Next 48 Hours</h1>
     </a>
 
     <div id="chartContainer">
@@ -27,21 +27,20 @@
             const data = await response.json();
 
             // Extract datetime and price data from the JSON
-            const datetime = data.map(entry => new Date(entry.datetime)); // Parse datetime as Date objects
+            const datetime = data.map(entry => new Date(entry.datetime));
             const prices = data.map(entry => entry.price);
 
-            // Create a chart
+            // Create a bar chart
             const ctx = document.getElementById('priceChart').getContext('2d');
             new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: datetime,
+                    labels: datetime, // Use datetime for the x-axis labels
                     datasets: [{
                         label: 'Electricity Prices',
                         data: prices,
-                        borderColor: 'blue',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)', // Set a single color
                         borderWidth: 1,
-                        fill: false,
                     }],
                 },
                 options: {
@@ -52,8 +51,12 @@
                             time: {
                                 unit: 'hour',
                                 displayFormats: {
-                                    hour: 'HH:mm',
+                                    hour: 'HH:mm', // Display format for hours and minutes
                                 },
+                            },
+                            title: {
+                                display: true,
+                                text: 'Date and Time',
                             },
                         },
                         y: {
