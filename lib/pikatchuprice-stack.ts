@@ -10,6 +10,7 @@ import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 
 export class PikatchupriceStack extends cdk.Stack {
@@ -42,6 +43,22 @@ export class PikatchupriceStack extends cdk.Stack {
       ],
     });
 
+    const newElectricityPricesTable = new dynamodb.Table(this, 'NewElectricityPricesTable', {
+      partitionKey: { name: 'datetime', type: dynamodb.AttributeType.STRING },
+      tableName: 'NewElectricityPrices',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
+    });
+    
+
+    // Create UserSubscriptions table
+    const userSubscriptionsTable = new dynamodb.Table(this, 'UserSubscriptionsTable', {
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      tableName: 'UserSubscriptions',
+      removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
+    });
+
+    
+
     // Update your existing BucketDeployment to include the distribution
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset('./public')],
@@ -60,7 +77,8 @@ export class PikatchupriceStack extends cdk.Stack {
 
     // Allow Lambda to publish to SNS Topic
     topic.grantPublish(fetchPricesLambda);
-
+    // Grant write permissions to the Lambda function
+    newElectricityPricesTable.grantWriteData(fetchPricesLambda);
     // Optionally, add an email subscription to the topic
     topic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
 
