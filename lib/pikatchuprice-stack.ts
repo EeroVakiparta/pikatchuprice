@@ -84,9 +84,7 @@ export class PikatchupriceStack extends cdk.Stack {
     // Optionally, add an email subscription to the topic
     topic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
 
-    new apigateway.LambdaRestApi(this, 'Endpoint', {
-      handler: fetchPricesLambda,
-    });
+  
 
     // Create a new Lambda function for notifications
     const notifyLambda = new lambda.Function(this, 'notifyFunction', {
@@ -107,6 +105,9 @@ export class PikatchupriceStack extends cdk.Stack {
 
     pikaElectricityPricesTable.grantReadData(fetchElectricityPricesFromDBLambda);
 
+    new apigateway.LambdaRestApi(this, 'Endpoint', {
+      handler: fetchElectricityPricesFromDBLambda, // Use fetchElectricityPricesFromDBLambda as the handler
+    });
     //
 
     // Schedule the Lambda function to run every hour
