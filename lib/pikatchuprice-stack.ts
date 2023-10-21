@@ -8,6 +8,9 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+
 
 export class PikatchupriceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -46,12 +49,21 @@ export class PikatchupriceStack extends cdk.Stack {
       distribution,
     });
 
+    // Create SNS Topic
+    const topic = new sns.Topic(this, 'MyTopic');
+
     const fetchPricesLambda = new lambda.Function(this, 'fetchPricesFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'fetchPrices.handler',
       code: lambda.Code.fromAsset('lambda'),
     });
-    
+
+    // Allow Lambda to publish to SNS Topic
+    topic.grantPublish(fetchPricesLambda);
+
+    // Optionally, add an email subscription to the topic
+    topic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
+
     new apigateway.LambdaRestApi(this, 'Endpoint', {
       handler: fetchPricesLambda,
     });

@@ -1,15 +1,8 @@
-require('dotenv').config();
-const webpush = require('web-push');
-const https = require('https');
-const fs = require('fs');
-const pubKey = process.env.VAPID_PUBLIC_KEY;
-const privKey = process.env.VAPID_PRIVATE_KEY;
+import * as AWS from 'aws-sdk';
+import https = require('https');
+import fs = require('fs');
 
-webpush.setVapidDetails(
-  'mailto:your-email@example.com',
-  pubKey,
-  privKey
-);
+const sns = new AWS.SNS();
 
 export const handler = async (event: any): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -25,14 +18,15 @@ export const handler = async (event: any): Promise<any> => {
         const lowPrice = prices.find((price: any) => price.price < 0.5);
 
         if (lowPrice) {
-          // Read subscriptions from the JSON file
-          const subscriptions = JSON.parse(fs.readFileSync('subscriptions.json', 'utf8'));
+          // Publish to SNS Topic
+          const params = {
+            Message: 'Low electricity price!',
+            TopicArn: 'arn:aws:sns:eu-north-1:126278133652:PikaPriceTopic'
+          };
 
-          subscriptions.forEach((subscription: any) => {
-            webpush.sendNotification(subscription, 'Low electricity price!')
-              .catch((error: any) => {
-                console.error(error.stack);
-              });
+          sns.publish(params, function(err, data) {
+            if (err) console.error(err, err.stack);
+            else console.log(data);
           });
         }
 
