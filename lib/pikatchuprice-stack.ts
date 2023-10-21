@@ -43,12 +43,13 @@ export class PikatchupriceStack extends cdk.Stack {
       ],
     });
 
-    const newElectricityPricesTable = new dynamodb.Table(this, 'NewElectricityPricesTable', {
-      partitionKey: { name: 'datetime', type: dynamodb.AttributeType.STRING },
-      tableName: 'NewElectricityPrices',
+    const pikaElectricityPricesTable = new dynamodb.Table(this, 'PikaElectricityPricesTable', {
+      partitionKey: { name: 'partitionKey', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'datetime', type: dynamodb.AttributeType.STRING },
+      tableName: 'PikaElectricityPricesTable',
       removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
     });
-    
+
 
     // Create UserSubscriptions table
     const userSubscriptionsTable = new dynamodb.Table(this, 'UserSubscriptionsTable', {
@@ -57,7 +58,7 @@ export class PikatchupriceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
     });
 
-    
+
 
     // Update your existing BucketDeployment to include the distribution
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
@@ -73,12 +74,13 @@ export class PikatchupriceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'fetchPrices.handler',
       code: lambda.Code.fromAsset('lambda'),
+      timeout: cdk.Duration.seconds(10),
     });
 
     // Allow Lambda to publish to SNS Topic
     topic.grantPublish(fetchPricesLambda);
     // Grant write permissions to the Lambda function
-    newElectricityPricesTable.grantWriteData(fetchPricesLambda);
+    pikaElectricityPricesTable.grantWriteData(fetchPricesLambda);
     // Optionally, add an email subscription to the topic
     topic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
 
@@ -97,10 +99,27 @@ export class PikatchupriceStack extends cdk.Stack {
       }
     });
 
+    const fetchElectricityPricesFromDBLambda = new lambda.Function(this, 'fetchElectricityPricesFromDBFunction', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'fetchElectricityPricesFromDB.handler',
+      code: lambda.Code.fromAsset('lambda'),
+    });
+
+    pikaElectricityPricesTable.grantReadData(fetchElectricityPricesFromDBLambda);
+
+    //
+
     // Schedule the Lambda function to run every hour
     new events.Rule(this, 'ScheduleRule', {
       schedule: events.Schedule.rate(cdk.Duration.hours(1)),
       targets: [new targets.LambdaFunction(notifyLambda)],
     });
+
+    // Schedule your Lambda function to run once a day
+    const rule = new events.Rule(this, 'Rule', {
+      schedule: events.Schedule.cron({ minute: '0', hour: '6,18' }),  // This will run the function at 6am and 6pm UTC
+    });
+
+    rule.addTarget(new targets.LambdaFunction(fetchPricesLambda));
   }
 }

@@ -4,7 +4,52 @@ import https = require('https');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event: any): Promise<any> => {
-  return new Promise((resolve, reject) => {
+  try {
+    const data = await fetchDataFromExternalAPI();
+    const prices = JSON.parse(data).prices;
+
+    // Prepare batch write requests with a limit of 25 items per request
+    const batchWritePromises: Promise<any>[] = [];
+
+    for (let i = 0; i < prices.length; i += 25) {
+      const batchItems = prices.slice(i, i + 25);
+      const batchWriteParams = {
+        RequestItems: {
+          'PikaElectricityPricesTable': batchItems.map((price: any) => ({
+            PutRequest: {
+              Item: {
+                'partitionKey': 'ElectricityPrices',
+                'datetime': price.startDate,
+                'price': price.price, // Store individual price
+              },
+            },
+          })),
+        },
+      };
+      batchWritePromises.push(dynamoDB.batchWrite(batchWriteParams).promise());
+    }
+
+    // Execute batch write promises in parallel
+    await Promise.all(batchWritePromises);
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: data,
+    };
+  } catch (error) {
+    console.error("Error:", error);
+    return {
+      statusCode: 500,
+      body: 'Failed to fetch or store data',
+    };
+  }
+};
+
+async function fetchDataFromExternalAPI(): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
     https.get('https://api.porssisahko.net/v1/latest-prices.json', (res: any) => {
       let data = '';
 
@@ -13,40 +58,10 @@ export const handler = async (event: any): Promise<any> => {
       });
 
       res.on('end', () => {
-        const prices = JSON.parse(data).prices;
-
-        // Loop through each price to store it in DynamoDB
-        prices.forEach((price: any) => {
-          const putParams = {
-            TableName: 'NewElectricityPrices',
-            Item: {
-              'datetime': price.startDate,
-              'price': price.price
-            }
-          };
-
-          dynamoDB.put(putParams, (err, dbData) => {
-            if (err) {
-              console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-            } else {
-              console.log("Added item:", JSON.stringify(dbData, null, 2));
-            }
-          });
-        });
-
-        resolve({
-          statusCode: 200,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-          },
-          body: data,
-        });
+        resolve(data);
       });
     }).on('error', (error: any) => {
-      reject({
-        statusCode: 500,
-        body: 'Failed to fetch data',
-      });
+      reject(error);
     });
   });
-};
+}
