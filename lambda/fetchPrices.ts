@@ -15,11 +15,11 @@ export const handler = async (event: any): Promise<any> => {
       const batchItems = prices.slice(i, i + 25);
       const batchWriteParams = {
         RequestItems: {
-          'PikaElectricityPricesTable': batchItems.map((price: any) => ({
+          'PPElectricityPricesTable': batchItems.map((price: any) => ({
             PutRequest: {
               Item: {
                 'partitionKey': 'ElectricityPrices',
-                'datetime': price.startDate,
+                'priceTime': price.startDate,
                 'price': price.price, // Store individual price
               },
             },
@@ -31,6 +31,8 @@ export const handler = async (event: any): Promise<any> => {
 
     // Execute batch write promises in parallel
     await Promise.all(batchWritePromises);
+    // log to CloudWatch how many items were written to DynamoDB
+    console.log(`Wrote ${prices.length} items to DynamoDB`);
 
     return {
       statusCode: 200,

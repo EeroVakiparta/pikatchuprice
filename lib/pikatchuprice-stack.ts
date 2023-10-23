@@ -43,10 +43,10 @@ export class PikatchupriceStack extends cdk.Stack {
       ],
     });
 
-    const pikaElectricityPricesTable = new dynamodb.Table(this, 'PikaElectricityPricesTable', {
+    const pikaElectricityPricesTable = new dynamodb.Table(this, 'PPElectricityPricesTable', {
       partitionKey: { name: 'partitionKey', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'datetime', type: dynamodb.AttributeType.STRING },
-      tableName: 'PikaElectricityPricesTable',
+      sortKey: { name: 'priceTime', type: dynamodb.AttributeType.STRING },
+      tableName: 'PPElectricityPricesTable',
       removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
     });
 
@@ -118,7 +118,7 @@ export class PikatchupriceStack extends cdk.Stack {
 
     // Schedule your Lambda function to run once a day
     const rule = new events.Rule(this, 'Rule', {
-      schedule: events.Schedule.cron({ minute: '0', hour: '6,18' }),  // This will run the function at 6am and 6pm UTC
+      schedule: events.Schedule.rate(cdk.Duration.hours(1)),
     });
 
     rule.addTarget(new targets.LambdaFunction(fetchPricesLambda));
