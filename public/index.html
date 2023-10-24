@@ -15,28 +15,40 @@
 
     <h1>Electricity Prices for Next 48 Hours</h1>
 
+    <!-- Add a button to manually refresh data -->
+    <button id="refreshButton">Refresh Data</button>
 
     <div id="chartContainer">
         <canvas id="priceChart"></canvas>
         <p>v0.1</p>
     </div>
 
+    <!-- Add a text element to display the last refresh time -->
+    <p id="lastRefreshTime">Last Refresh: N/A</p>
+
     <script>
+        let lastRefresh = 'N/A'; // Initialize last refresh time
+        let chart = null; // Store the chart instance
+
         async function fetchData() {
+            if (chart !== null) {
+                chart.destroy(); // Destroy the existing chart instance
+            }
+
             // Call the fetchElectricityPricesFromDB function to get the data
             const response = await fetchElectricityPricesFromDB();
             const data = await response.json();
-    
+
             // Extract priceTime and price data from the JSON
             const priceTime = data.map(entry => new Date(entry.priceTime));
             const prices = data.map(entry => entry.price);
-    
+
             // Get the current time
             const currentTime = new Date();
-    
+
             // Create a bar chart
             const ctx = document.getElementById('priceChart').getContext('2d');
-            new Chart(ctx, {
+            chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: priceTime, // Use priceTime for the x-axis labels
@@ -93,11 +105,10 @@
                     },
                 },
             });
-    
+
             // Add vertical lines to separate days
-            const chart = Chart.instances[0]; // Get the chart instance
             const xAxis = chart.scales.x; // Get the x-axis scale
-    
+
             // Calculate the positions of vertical lines based on date changes
             let prevDate = null;
             priceTime.forEach((date, index) => {
@@ -114,19 +125,33 @@
                 }
                 prevDate = date;
             });
+
+            // Update the last refresh time
+            lastRefresh = new Date().toLocaleTimeString();
+            const lastRefreshTime = document.getElementById('lastRefreshTime');
+            lastRefreshTime.textContent = `Last Refresh: ${lastRefresh}`;
         }
-    
+
         // Function to fetch data from your API
         async function fetchElectricityPricesFromDB() {
             // Replace the URL with your actual API endpoint
             const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
             return response;
         }
-    </script>
-    
-    
-    
 
+        // Add an event listener for the window's focus event
+        window.addEventListener('focus', function () {
+            // Call your data fetching function when the PWA gains focus
+            fetchData();
+        });
+
+        // Add an event listener for the manual refresh button
+        const refreshButton = document.getElementById('refreshButton');
+        refreshButton.addEventListener('click', function () {
+            // Call your data fetching function when the button is clicked
+            fetchData();
+        });
+    </script>
 </body>
 
 </html>
