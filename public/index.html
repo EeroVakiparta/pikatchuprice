@@ -12,9 +12,9 @@
 
 <body onload="fetchData()">
     <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" width="350" alt="Pikachu" />
-    
-        <h1>Electricity Prices for Next 48 Hours</h1>
-    
+
+    <h1>Electricity Prices for Next 48 Hours</h1>
+
 
     <div id="chartContainer">
         <canvas id="priceChart"></canvas>
@@ -26,13 +26,14 @@
             // Call the fetchElectricityPricesFromDB function to get the data
             const response = await fetchElectricityPricesFromDB();
             const data = await response.json();
-
+    
             // Extract priceTime and price data from the JSON
             const priceTime = data.map(entry => new Date(entry.priceTime));
             const prices = data.map(entry => entry.price);
+    
             // Get the current time
             const currentTime = new Date();
-
+    
             // Create a bar chart
             const ctx = document.getElementById('priceChart').getContext('2d');
             new Chart(ctx, {
@@ -47,19 +48,14 @@
                             if (dt.getHours() === currentTime.getHours() && dt.getDate() === currentTime.getDate()) {
                                 // If it's the current time, set a different color
                                 return 'rgba(0, 0, 0, 0.6)'; // Black color
-                                // else if price is higher than 8
                             } else if (prices[priceTime.indexOf(dt)] < 6) {
                                 return 'rgba(75, 192, 192, 0.6)'; // Green color
-                                // else if price is higher than 5
                             } else if (prices[priceTime.indexOf(dt)] < 15) {
                                 return 'rgba(255, 255, 0, 0.6)'; // Yellow color
-                                // else if price is higher than 3
                             } else if (prices[priceTime.indexOf(dt)] < 24) {
                                 return 'rgba(255, 165, 0, 0.6)'; // Orange color
-                                // else if price is higher than 0
                             } else if (prices[priceTime.indexOf(dt)] >= 24) {
                                 return 'rgba(255, 0, 255, 0.6)'; // Purple color
-                                // else if price is higher than 0                           
                             } else {
                                 return 'rgba(75, 192, 192, 0.2)'; // Default color
                             }
@@ -90,18 +86,47 @@
                             },
                         },
                     },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                    },
                 },
             });
+    
+            // Add vertical lines to separate days
+            const chart = Chart.instances[0]; // Get the chart instance
+            const xAxis = chart.scales.x; // Get the x-axis scale
+    
+            // Calculate the positions of vertical lines based on date changes
+            let prevDate = null;
+            priceTime.forEach((date, index) => {
+                if (prevDate !== null && date.getDate() !== prevDate.getDate()) {
+                    const lineX = xAxis.getPixelForValue(date);
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(lineX, 0);
+                    ctx.lineTo(lineX, chart.height);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                prevDate = date;
+            });
         }
-
+    
         // Function to fetch data from your API
         async function fetchElectricityPricesFromDB() {
             // Replace the URL with your actual API endpoint
             const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
             return response;
         }
-
     </script>
+    
+    
+    
+
 </body>
 
 </html>
