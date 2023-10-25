@@ -112,7 +112,7 @@ export class PikatchupriceStack extends cdk.Stack {
 
     // Schedule the Lambda function to run every hour
     new events.Rule(this, 'ScheduleRule', {
-      schedule: events.Schedule.rate(cdk.Duration.hours(1)),
+      schedule: events.Schedule.cron({ minute: '0', hour: '10-16' }),
       targets: [new targets.LambdaFunction(notifyLambda)],
     });
 

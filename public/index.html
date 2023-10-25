@@ -5,6 +5,15 @@
     <meta charset="UTF-8">
     <link rel="manifest" href="/manifest.json">
     <title>Pikatchu Prices (aka. PP)</title>
+    <style>
+        /* Style for the refresh button */
+        #refreshButton {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Include the date adapter library -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -13,18 +22,18 @@
 <body onload="fetchData()">
     <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" width="350" alt="Pikachu" />
 
-    <h1>Electricity Prices for Next 48 Hours</h1>
+    <h1>Electricity Prices</h1>
 
     <!-- Add a button to manually refresh data -->
     <button id="refreshButton">Refresh Data</button>
+    <!-- Add a text element to display the last refresh time -->
+    <p id="lastRefreshTime">Last Refresh: N/A</p>
 
     <div id="chartContainer">
         <canvas id="priceChart"></canvas>
         <p>v0.1</p>
     </div>
 
-    <!-- Add a text element to display the last refresh time -->
-    <p id="lastRefreshTime">Last Refresh: N/A</p>
 
     <script>
         let lastRefresh = 'N/A'; // Initialize last refresh time
