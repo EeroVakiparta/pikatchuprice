@@ -6,16 +6,26 @@
     <link rel="manifest" href="/manifest.json">
     <title>Pikatchu Prices (aka. PP)</title>
     <style>
-        /* Style for the refresh button */
         #refreshButton {
             font-size: 20px;
             padding: 10px 20px;
             margin: 10px;
             cursor: pointer;
         }
+
+        @media (max-width: 768px) {
+            #refreshButton {
+                font-size: 16px;
+                padding: 8px 16px;
+                margin: 8px;
+            }
+
+            img {
+                width: 250px;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Include the date adapter library -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 </head>
 
@@ -24,9 +34,7 @@
 
     <h1>Electricity Prices</h1>
 
-    <!-- Add a button to manually refresh data -->
     <button id="refreshButton">Refresh Data</button>
-    <!-- Add a text element to display the last refresh time -->
     <p id="lastRefreshTime">Last Refresh: N/A</p>
 
     <div id="chartContainer">
@@ -34,33 +42,47 @@
         <p>v0.1</p>
     </div>
 
-
     <script>
-        let lastRefresh = 'N/A'; // Initialize last refresh time
-        let chart = null; // Store the chart instance
+        let lastRefresh = 'N/A';
+        let chart = null;
 
         async function fetchData() {
             if (chart !== null) {
-                chart.destroy(); // Destroy the existing chart instance
+                chart.destroy();
             }
 
-            // Call the fetchElectricityPricesFromDB function to get the data
             const response = await fetchElectricityPricesFromDB();
+            if (response === null) return;  // Exit if there was an error fetching data
+
             const data = await response.json();
 
-            // Extract priceTime and price data from the JSON
             const priceTime = data.map(entry => new Date(entry.priceTime));
             const prices = data.map(entry => entry.price);
 
-            // Get the current time
-            const currentTime = new Date();
+            renderChart(priceTime, prices);
+            updateLastRefreshTime();
+        }
 
-            // Create a bar chart
+        async function fetchElectricityPricesFromDB() {
+            try {
+                const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response;
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+                return null;
+            }
+        }
+
+        function renderChart(priceTime, prices) {
+            const currentTime = new Date(); 
             const ctx = document.getElementById('priceChart').getContext('2d');
             chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: priceTime, // Use priceTime for the x-axis labels
+                    labels: priceTime,
                     datasets: [{
                         label: 'Electricity Prices',
                         data: prices,
@@ -92,7 +114,7 @@
                             time: {
                                 unit: 'hour',
                                 displayFormats: {
-                                    hour: 'HH:mm', // Display format for hours and minutes
+                                    hour: 'HH:mm',
                                 },
                             },
                             title: {
@@ -135,29 +157,19 @@
                 prevDate = date;
             });
 
-            // Update the last refresh time
+        }
+        function updateLastRefreshTime() {
             lastRefresh = new Date().toLocaleTimeString();
             const lastRefreshTime = document.getElementById('lastRefreshTime');
             lastRefreshTime.textContent = `Last Refresh: ${lastRefresh}`;
         }
 
-        // Function to fetch data from your API
-        async function fetchElectricityPricesFromDB() {
-            // Replace the URL with your actual API endpoint
-            const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
-            return response;
-        }
-
-        // Add an event listener for the window's focus event
         window.addEventListener('focus', function () {
-            // Call your data fetching function when the PWA gains focus
             fetchData();
         });
 
-        // Add an event listener for the manual refresh button
         const refreshButton = document.getElementById('refreshButton');
         refreshButton.addEventListener('click', function () {
-            // Call your data fetching function when the button is clicked
             fetchData();
         });
     </script>
