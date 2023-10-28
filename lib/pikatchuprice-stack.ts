@@ -31,7 +31,6 @@ export class PikatchupriceStack extends cdk.Stack {
 
     websiteBucket.addToResourcePolicy(bucketPolicy);
 
-    // Create a CloudFront distribution
     const distribution = new cloudfront.CloudFrontWebDistribution(this, 'MyDistribution', {
       originConfigs: [
         {
@@ -50,15 +49,11 @@ export class PikatchupriceStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
     });
 
-
-    // Create UserSubscriptions table
     const userSubscriptionsTable = new dynamodb.Table(this, 'UserSubscriptionsTable', {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       tableName: 'UserSubscriptions',
       removalPolicy: cdk.RemovalPolicy.DESTROY,  // Only for dev/test environments
     });
-
-
 
     // Update your existing BucketDeployment to include the distribution
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
@@ -68,7 +63,7 @@ export class PikatchupriceStack extends cdk.Stack {
     });
 
     // Create SNS Topic
-    const topic = new sns.Topic(this, 'MyTopic');
+    const priceNotificationTopic = new sns.Topic(this, 'PriceNotificationTopic');
 
     const fetchPricesLambda = new lambda.Function(this, 'fetchPricesFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -77,25 +72,43 @@ export class PikatchupriceStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
     });
 
-    // Allow Lambda to publish to SNS Topic
-    topic.grantPublish(fetchPricesLambda);
-    // Grant write permissions to the Lambda function
+    priceNotificationTopic.grantPublish(fetchPricesLambda);
     pikaElectricityPricesTable.grantWriteData(fetchPricesLambda);
-    // Optionally, add an email subscription to the topic
-    topic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
+    priceNotificationTopic.addSubscription(new snsSubscriptions.EmailSubscription('vakipartaeero@gmail.com'));
 
-  
+    const registerPhoneNumberLambda = new lambda.Function(this, 'RegisterPhoneNumberFunction', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'registerPhoneNumber.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        TABLE_NAME: userSubscriptionsTable.tableName,
+      },
+    });
 
-    // Create a new Lambda function for notifications
-    const notifyLambda = new lambda.Function(this, 'notifyFunction', {
+    userSubscriptionsTable.grantWriteData(registerPhoneNumberLambda);
+
+    const registerPhoneNumberApi = new apigateway.RestApi(this, 'RegisterPhoneNumberApi', {
+      restApiName: 'Register Phone Number Service',
+      description: 'This service registers a phone number for price notifications.',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,  // Allows access from any origin
+        allowMethods: apigateway.Cors.ALL_METHODS,  // Allows all HTTP methods
+      },
+    });
+    
+    const registerPhoneNumberIntegration = new apigateway.LambdaIntegration(registerPhoneNumberLambda);
+    registerPhoneNumberApi.root.addMethod('POST', registerPhoneNumberIntegration);  // Adding a POST method to the API root
+
+    const notifyUsersLambda = new lambda.Function(this, 'notifyFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
       handler: 'sendNotification.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment: {
-        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
-        VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || ''
-      }
+        TOPIC_ARN: priceNotificationTopic.topicArn,
+      },
     });
+
+    priceNotificationTopic.grantPublish(notifyUsersLambda);
 
     const fetchElectricityPricesFromDBLambda = new lambda.Function(this, 'fetchElectricityPricesFromDBFunction', {
       runtime: lambda.Runtime.NODEJS_16_X,
@@ -106,21 +119,23 @@ export class PikatchupriceStack extends cdk.Stack {
     pikaElectricityPricesTable.grantReadData(fetchElectricityPricesFromDBLambda);
 
     new apigateway.LambdaRestApi(this, 'Endpoint', {
-      handler: fetchElectricityPricesFromDBLambda, // Use fetchElectricityPricesFromDBLambda as the handler
+      handler: fetchElectricityPricesFromDBLambda,
     });
-    //
 
-    // Schedule the Lambda function to run every hour
-    new events.Rule(this, 'ScheduleRule', {
+    // NOTIFY USERS RULE
+    new events.Rule(this, 'NotifyUsersRule', {
+      //schedule: events.Schedule.cron({ minute: '0', hour: '17' }),
+      //send notification every 10 minutes for testing purposes
+      schedule: events.Schedule.rate(cdk.Duration.minutes(10)),
+      targets: [new targets.LambdaFunction(notifyUsersLambda)],
+    });
+
+    // GET NEW PRICES RULE
+    const ruleNewPricesFetchingSchedule = new events.Rule(this, 'FetchPricesRule', {
       schedule: events.Schedule.cron({ minute: '0', hour: '10-16' }),
-      targets: [new targets.LambdaFunction(notifyLambda)],
     });
 
-    // Schedule your Lambda function to run once a day
-    const rule = new events.Rule(this, 'Rule', {
-      schedule: events.Schedule.rate(cdk.Duration.hours(1)),
-    });
+    ruleNewPricesFetchingSchedule.addTarget(new targets.LambdaFunction(fetchPricesLambda));
 
-    rule.addTarget(new targets.LambdaFunction(fetchPricesLambda));
   }
 }
