@@ -11,7 +11,8 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as tasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 
 export class PikatchupriceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -62,7 +63,6 @@ export class PikatchupriceStack extends cdk.Stack {
       distribution,
     });
 
-    // Create SNS Topic
     const priceNotificationTopic = new sns.Topic(this, 'PriceNotificationTopic');
 
     const fetchPricesLambda = new lambda.Function(this, 'fetchPricesFunction', {
@@ -95,7 +95,7 @@ export class PikatchupriceStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,  // Allows all HTTP methods
       },
     });
-    
+
     const registerPhoneNumberIntegration = new apigateway.LambdaIntegration(registerPhoneNumberLambda);
     registerPhoneNumberApi.root.addMethod('POST', registerPhoneNumberIntegration);  // Adding a POST method to the API root
 
@@ -117,6 +117,72 @@ export class PikatchupriceStack extends cdk.Stack {
     });
 
     pikaElectricityPricesTable.grantReadData(fetchElectricityPricesFromDBLambda);
+
+    //--- step function playground
+    const fetchElectricityPricesLambda = new lambda.Function(this, 'FetchElectricityPricesLambda', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'fetchElectricityPrices.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      timeout: cdk.Duration.seconds(10),
+    });
+
+    const checkPriceThresholdLambda = new lambda.Function(this, 'CheckPriceThresholdLambda', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'checkPriceThreshold.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        PRICE_THRESHOLD: '10.5',  // send notifications when under this price
+      },
+    });
+
+    const retrieveSubscribersLambda = new lambda.Function(this, 'RetrieveSubscribersLambda', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'retrieveSubscribers.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        TABLE_NAME: 'UserSubscriptions',  
+      },
+    });
+
+    const sendSmsLambda = new lambda.Function(this, 'SendSmsLambda', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      handler: 'sendSms.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        TOPIC_ARN: priceNotificationTopic.topicArn,
+      },
+    });
+
+    // Grant permission to publish to the SNS Topic
+    const topic = sns.Topic.fromTopicArn(this, 'Topic', 'arn:aws:sns:eu-north-1:126278133652:PikaPriceTopic');
+    topic.grantPublish(sendSmsLambda);
+
+    const getPricesState = new tasks.LambdaInvoke(this, 'Get Latest Electricity Prices', {
+      lambdaFunction: fetchElectricityPricesLambda,
+      outputPath: '$.Payload',
+    });
+
+    const checkPriceThresholdState = new tasks.LambdaInvoke(this, 'Check Price Threshold', {
+      lambdaFunction: checkPriceThresholdLambda,
+      inputPath: '$.Payload',
+      outputPath: '$.Payload',
+    });
+
+    const sendSmsState = new tasks.LambdaInvoke(this, 'Send SMS Notifications', {
+      lambdaFunction: sendSmsLambda,
+      inputPath: '$.Payload',
+    });
+
+
+    getPricesState.next(checkPriceThresholdState);
+    checkPriceThresholdState.next(sendSmsState);
+
+    const stateMachine = new sfn.StateMachine(this, 'NotificationStateMachine', {
+      definition: getPricesState,
+      timeout: cdk.Duration.minutes(5),
+    });
+
+    priceNotificationTopic.grantPublish(sendSmsLambda);
 
     new apigateway.LambdaRestApi(this, 'Endpoint', {
       handler: fetchElectricityPricesFromDBLambda,
