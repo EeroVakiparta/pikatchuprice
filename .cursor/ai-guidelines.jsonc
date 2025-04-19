@@ -1,0 +1,87 @@
+{
+  "version": "1.0",
+  "project": "PikatchuPrice",
+  "description": "AWS-based electricity price monitoring system with serverless architecture",
+  
+  "guidelines": {
+    "general": [
+      "PikatchuPrice is a serverless AWS application for monitoring electricity prices and sending notifications",
+      "Follow established code patterns in the project before suggesting new approaches",
+      "Always consider backward compatibility, especially for API responses",
+      "Use conventional commit format (fix:, feat:, docs:, etc.) to properly trigger semantic versioning"
+    ],
+    
+    "architecture": [
+      "The application uses AWS Lambda, DynamoDB, S3, API Gateway, and CloudFront",
+      "Lambda functions fetch electricity prices, store them in DynamoDB, and serve them via API Gateway",
+      "The frontend is hosted on S3 with CloudFront distribution",
+      "CI/CD is handled through GitHub Actions with semantic-release for versioning"
+    ],
+    
+    "codebase_navigation": [
+      "/lambda/ - Contains Lambda function implementations",
+      "/lib/ - Contains CDK infrastructure code",
+      "/public/ - Frontend web application",
+      "/docs/ - Human-readable documentation",
+      "/bin/ - Entry point for CDK app",
+      "/.github/workflows/ - CI/CD pipeline configuration"
+    ],
+    
+    "api_compatibility": [
+      "The API returns an array of price objects with properties: price, priceTime, and timestamp",
+      "The frontend expects this specific format - don't break backward compatibility",
+      "Refer to docs/api-response-format.md for details on the API structure"
+    ],
+    
+    "github_actions": [
+      "CI/CD runs on every push to main branch",
+      "GitHub CLI is installed for monitoring workflows: gh run list -R EeroVakiparta/pikatchuprice",
+      "Check workflow status before suggesting code changes that might break the build",
+      "To view details of a specific run: gh run view <run-id> -R EeroVakiparta/pikatchuprice",
+      "semantic-release handles versioning based on conventional commit messages",
+      "IMPORTANT: Always check GitHub Actions results after modifying workflow files",
+      "When adding third-party actions, verify they exist and are maintained",
+      "After pushing workflow changes, wait for and verify the build completes successfully"
+    ],
+    
+    "aws_infrastructure": [
+      "Always use the latest Node.js runtime for Lambda functions",
+      "Include proper error handling and CORS headers in Lambda responses",
+      "Be cautious with DynamoDB schema changes that might affect existing data",
+      "CDK deployment guide explains infrastructure patterns to follow"
+    ],
+    
+    "frontend": [
+      "The frontend is a responsive web application",
+      "It uses Chart.js for data visualization",
+      "Test any changes against both desktop and mobile views",
+      "Check version.json is properly updated with version information"
+    ],
+    
+    "common_issues": [
+      "Backward compatibility problems with API responses",
+      "Missing AWS credentials for deployment",
+      "Incorrect Node.js runtime versions",
+      "Cross-Origin Resource Sharing (CORS) issues with API Gateway",
+      "Missing environment variables for Lambda functions"
+    ],
+    
+    "troubleshooting_commands": [
+      "aws cloudformation describe-stacks --stack-name PikatchupriceStack",
+      "aws lambda get-function --function-name PikatchupriceStack-fetchPricesFunction",
+      "gh run list -R EeroVakiparta/pikatchuprice --workflow \"Deploy PikatchuPrice CDK Stack\"",
+      "aws s3 ls s3://pikatchupricestack-pikatchupricebucket"
+    ],
+
+    "ci_cd_verification": [
+      "After any change to GitHub Actions workflows, explicitly verify the workflow runs successfully",
+      "Use 'gh run watch -R EeroVakiparta/pikatchuprice <run-id>' to monitor a workflow in real-time",
+      "Before suggesting third-party GitHub Actions, verify they exist with 'gh api /repos/{owner}/{repo}'",
+      "Always check logs for any workflow that failed: 'gh run view <run-id> --log'",
+      "Test workflow changes in a branch before merging to main when possible",
+      "When adding dependencies to workflows, verify they are actively maintained",
+      "All direct commands used in workflows should be tested locally when possible",
+      "Document any known workflow issues and their workarounds in code comments"
+    ]
+  }
+} 
