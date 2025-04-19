@@ -10,6 +10,7 @@ Welcome to the PikatchuPrice documentation. This guide will help you understand 
 4. [Commit Guidelines](./commit-guidelines.md)
 5. [GitHub Secrets Setup](./github-secrets.md)
 6. [API Response Format](./api-response-format.md)
+7. [GitHub CLI Setup](./github-cli-setup.md)
 
 ## Project Overview
 
