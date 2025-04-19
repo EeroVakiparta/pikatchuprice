@@ -49,6 +49,25 @@ Comprehensive documentation is available in the [docs](./docs) directory:
    npm run cdk deploy
    ```
 
+## GitHub Actions CI/CD Setup
+
+To enable automatic deployment through GitHub Actions, you need to configure AWS credentials:
+
+1. **Create an IAM User for GitHub Actions**:
+   - Go to the AWS IAM console and create a new user
+   - Set access type to "Programmatic access"
+   - Attach policies needed for CDK deployment (e.g., `AdministratorAccess` for simplicity, or more restrictive policies for production)
+   - After creation, save the Access Key ID and Secret Access Key
+
+2. **Add AWS Credentials to GitHub Secrets**:
+   - Go to your GitHub repository
+   - Navigate to Settings > Secrets and variables > Actions
+   - Add a new repository secret named `AWS_ACCESS_KEY_ID` with the access key from the IAM user
+   - Add another repository secret named `AWS_SECRET_ACCESS_KEY` with the secret key from the IAM user
+
+3. **Additional Secrets**:
+   - If you're using semantic-release, add a GitHub token as `NPM_TOKEN` (see docs for details)
+
 ## Development Commands
 
 * `npm run build`   - Compile TypeScript to JavaScript

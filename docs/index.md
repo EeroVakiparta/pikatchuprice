@@ -8,11 +8,12 @@ Welcome to the PikatchuPrice documentation. This guide will help you understand 
 2. [CDK Deployment Guide](./cdk-deployment-guide.md)
 3. [Versioning Options](./versioning-options.md)
 4. [Commit Guidelines](./commit-guidelines.md)
-5. [GitHub Secrets Setup](./github-secrets.md)
+5. [GitHub Secrets Setup](./github-secrets-setup.md)
 6. [API Response Format](./api-response-format.md)
 7. [GitHub CLI Setup](./github-cli-setup.md)
 8. [AI Assistant Guidelines](./ai-assistant-guidelines.md)
 9. [Monitoring Deployed Applications](./monitoring-deployed-application.md)
+10. [CI/CD with GitHub Actions](./github-secrets-setup.md#aws-authentication-method-access-keys)
 
 ## Project Overview
 
@@ -26,6 +27,7 @@ PikatchuPrice is an AWS-based system for monitoring electricity prices from exte
 - **Notification System**: SMS and email notifications via SNS
 - **Step Functions Workflow**: Orchestrated price checking and notification
 - **Web Frontend**: Hosted S3/CloudFront website
+- **CI/CD Pipeline**: Automated deployment using GitHub Actions with AWS access keys
 
 ### Architecture Diagram
 
@@ -68,6 +70,15 @@ To get started with PikatchuPrice development:
 2. Install dependencies with `npm install`
 3. Configure AWS credentials
 4. Follow the development workflows in the specific guides
+
+### CI/CD with GitHub Actions
+
+PikatchuPrice uses GitHub Actions for continuous integration and deployment:
+
+1. Every push to the `main` branch triggers the deployment workflow
+2. The workflow builds, tests, and deploys the application to AWS
+3. We use AWS access keys stored as GitHub secrets for authentication
+4. See [GitHub Secrets Setup](./github-secrets-setup.md) for details on configuring AWS credentials and secrets
 
 ## Contributing
 

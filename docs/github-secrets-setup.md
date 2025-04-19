@@ -1,6 +1,6 @@
 # Setting Up GitHub Secrets for PikatchuPrice
 
-This document guides you through setting up the necessary GitHub repository secrets for the automated versioning workflow.
+This document guides you through setting up the necessary GitHub secrets for the automated CI/CD workflow.
 
 ## Secret Names Required
 
@@ -13,6 +13,28 @@ NPM_TOKEN                # GitHub Personal Access Token with repo scope
 ```
 
 **IMPORTANT: NEVER commit actual credential values to this repository.**
+
+## AWS Authentication Method: Access Keys
+
+We use AWS access keys for authentication in GitHub Actions. This approach requires:
+
+1. Creating an IAM user with programmatic access
+2. Generating access keys for this user
+3. Adding these keys as GitHub secrets
+
+### Creating an IAM User for GitHub Actions
+
+1. Go to the AWS IAM console
+2. Navigate to "Users" and click "Add user"
+3. Enter a name (e.g., "github-actions-pikatchuprice")
+4. Select "Programmatic access" for Access type
+5. Click "Next: Permissions"
+6. You can either:
+   - Attach existing policies directly (e.g., `AdministratorAccess` for simplicity, or specific permissions for production)
+   - Add the user to a group with appropriate permissions
+   - Create a custom policy with the minimum necessary permissions
+7. Click through the review step and create the user
+8. **IMPORTANT**: On the success page, you will see the Access Key ID and Secret Access Key. This is the ONLY time you'll see the secret key, so make sure to save these values securely.
 
 ## Creating a GitHub Personal Access Token for NPM_TOKEN
 
@@ -37,13 +59,13 @@ Since we're only using semantic-release to update the version in the repository 
 4. Click "New repository secret"
 5. Add each secret:
 
-   For AWS credentials:
+   For AWS authentication:
    - Name: `AWS_ACCESS_KEY_ID`
-   - Value: [Your AWS access key]
+   - Value: [The Access Key ID you saved]
    - Click "Add secret"
 
    - Name: `AWS_SECRET_ACCESS_KEY`
-   - Value: [Your AWS secret key]
+   - Value: [The Secret Access Key you saved]
    - Click "Add secret"
 
    For semantic-release:
