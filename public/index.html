@@ -6,6 +6,29 @@
     <link rel="manifest" href="/manifest.json">
     <title>Pikatchu Prices (aka. PP)</title>
     <script>
+        let lastRefresh = 'N/A';
+        let chart = null;
+
+        // Fetch version information
+        async function fetchVersionInfo() {
+            try {
+                const response = await fetch('./version.json');
+                if (response.ok) {
+                    const versionData = await response.json();
+                    const versionElement = document.getElementById('versionInfo');
+                    versionElement.textContent = `v${versionData.version}`;
+                }
+            } catch (error) {
+                console.error('Error fetching version info:', error);
+            }
+        }
+
+        // Fetch data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchData();
+            fetchVersionInfo();
+        });
+
         async function fetchData() {
             const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
             const data = await response.json();
@@ -54,6 +77,12 @@
             <!-- Data will be inserted here -->
         </tbody>
     </table>
+
+    <div id="chartContainer">
+        <canvas id="priceChart"></canvas>
+        <p id="versionInfo">v0.1</p>
+        <button id="subscribeButton">Subscribe</button>
+    </div>
 
 </body>
 
