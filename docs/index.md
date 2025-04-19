@@ -15,6 +15,7 @@ Welcome to the PikatchuPrice documentation. This guide will help you understand 
 9. [Monitoring Deployed Applications](./monitoring-deployed-application.md)
 10. [CI/CD with GitHub Actions](./github-secrets-setup.md#aws-authentication-method-access-keys)
 11. [Branching Strategy](./branching-strategy.md)
+12. [Deprecated Features](./deprecated-features.md)
 
 ## Project Overview
 
