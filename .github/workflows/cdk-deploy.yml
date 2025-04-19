@@ -61,6 +61,16 @@ jobs:
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: npx cdk deploy --require-approval never 
 
+    - name: Wait for deployment to stabilize
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: sleep 30
+
+    - name: Check for console errors after deployment
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: |
+        npm install puppeteer
+        node test/console-errors.js
+
     - name: Create version.json
       run: |
         echo "{\"version\": \"$(node -e \"console.log(require('./package.json').version)\")\", \"buildDate\": \"$(date -u +'%Y-%m-%dT%H:%M:%S.%3NZ')\"}" > public/version.json

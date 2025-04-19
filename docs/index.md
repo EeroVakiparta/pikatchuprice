@@ -11,6 +11,8 @@ Welcome to the PikatchuPrice documentation. This guide will help you understand 
 5. [GitHub Secrets Setup](./github-secrets.md)
 6. [API Response Format](./api-response-format.md)
 7. [GitHub CLI Setup](./github-cli-setup.md)
+8. [AI Assistant Guidelines](./ai-assistant-guidelines.md)
+9. [Monitoring Deployed Applications](./monitoring-deployed-application.md)
 
 ## Project Overview
 
