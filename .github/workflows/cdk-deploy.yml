@@ -145,3 +145,27 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         npx semantic-release 
+        
+    # Add this new step to upload the updated version.json to S3 after release
+    - name: Upload updated version.json to S3
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        # Get the S3 bucket name from the CDK outputs or hardcode it if needed
+        BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name PikatchupriceStack --query "Stacks[0].Outputs[?OutputKey=='WebsiteBucketName'].OutputValue" --output text)
+        
+        if [ -z "$BUCKET_NAME" ]; then
+          # Fallback to the known bucket name if we couldn't get it from CloudFormation
+          BUCKET_NAME="pikatchupricestack-pikatchupricebucket69d94924-5i7w033szcqk"
+        fi
+        
+        echo "Uploading version.json to S3 bucket: $BUCKET_NAME"
+        aws s3 cp public/version.json s3://$BUCKET_NAME/version.json
+        
+        echo "Clearing CloudFront cache if applicable"
+        # Get CloudFront distribution ID if it exists
+        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Origins.Items[].DomainName, '$BUCKET_NAME')].Id" --output text)
+        
+        if [ -n "$DISTRIBUTION_ID" ]; then
+          echo "Invalidating CloudFront cache for distribution: $DISTRIBUTION_ID"
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/version.json"
+        fi 
