@@ -68,7 +68,16 @@ jobs:
     - name: Check for console errors after deployment
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
-        npm install puppeteer
+        # Install Puppeteer with dependencies
+        npm install --save-dev puppeteer
+        
+        # Ubuntu runners may need additional dependencies for Chromium
+        if [ -f /etc/os-release ]; then
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+        fi
+        
+        # Run the test with increased timeout
         node test/console-errors.js
 
     - name: Create version.json
