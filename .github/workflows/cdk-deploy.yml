@@ -58,19 +58,18 @@ jobs:
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
         echo "Checking AWS credentials configuration..."
-        aws sts get-caller-identity || echo "AWS credentials verification failed. Please check GitHub secrets."
-        echo "AWS_ACCESS_KEY_ID is set: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
-        echo "AWS_SECRET_ACCESS_KEY is set: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+        # Use set -e to fail the workflow if credentials aren't valid
+        set -e
+        aws sts get-caller-identity
+        echo "AWS credentials verified successfully"
 
     - name: CDK Synth
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: npx cdk synth
-      continue-on-error: true
 
     - name: CDK Deploy
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: npx cdk deploy --require-approval never
-      continue-on-error: true
 
     - name: Wait for deployment to stabilize
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'

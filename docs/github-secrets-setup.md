@@ -65,6 +65,8 @@ To verify your GitHub Actions secrets are correctly configured:
    - There are no extra spaces or line breaks in the secrets
    - You have proper permissions for the AWS resources being accessed
 
+**Important Note**: Our CI/CD workflow is designed to fail if AWS credentials are not properly configured. This is intentional - failed deployments are better than partial or incorrect deployments that might lead to inconsistent infrastructure.
+
 Your GitHub Actions workflow will now have access to these secrets when it runs. You don't need to modify the workflow file as it's already configured to use these secrets.
 
 ## Troubleshooting AWS Credential Issues
