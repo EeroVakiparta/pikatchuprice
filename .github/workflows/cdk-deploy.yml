@@ -126,7 +126,9 @@ jobs:
 
     - name: Create version.json
       run: |
-        echo "{\"version\": \"$(node -e \"console.log(require('./package.json').version)\")\", \"buildDate\": \"$(date -u +'%Y-%m-%dT%H:%M:%S.%3NZ')\"}" > public/version.json
+        VERSION=$(node -e "console.log(require('./package.json').version)")
+        BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%S.%3NZ')
+        echo "{\"version\": \"$VERSION\", \"buildDate\": \"$BUILD_DATE\"}" > public/version.json
         cat public/version.json
 
     - name: Generate CHANGELOG
