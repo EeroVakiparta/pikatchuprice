@@ -1,10 +1,10 @@
 # API Response Format Documentation
 
-This document describes the API response format for the Pikatchuprice application. The API is designed to maintain backward compatibility while supporting new features.
+This document describes the API response format for the Pikatchuprice application and how it interfaces with external data sources.
 
-## Original Format
+## Application API Format
 
-The original API format returns an array of objects with the following structure:
+The Pikatchuprice API returns an array of objects with the following structure:
 
 ```json
 [
@@ -22,8 +22,6 @@ The original API format returns an array of objects with the following structure
 ]
 ```
 
-This format is supported for backward compatibility with existing applications.
-
 ### Properties
 
 | Property   | Type    | Description                                  |
@@ -32,9 +30,9 @@ This format is supported for backward compatibility with existing applications.
 | priceTime  | string  | ISO date string for the price period start   |
 | timestamp  | number  | Unix timestamp (milliseconds) of priceTime   |
 
-## New Format (External API)
+## External API Format (porssisahko.net)
 
-The external API (porssisahko.net) uses a different format with an object containing a `prices` array:
+The external API we consume (porssisahko.net) uses a different format with an object containing a `prices` array:
 
 ```json
 {
@@ -69,21 +67,26 @@ The Lambda function in `lambda/fetchPrices.ts` handles the transformation from t
 1. Fetches data from porssisahko.net API
 2. Extracts the prices array from the response
 3. Transforms each price object to match our format (mapping startDate to priceTime)
-4. Returns the transformed array to maintain backward compatibility
+4. Returns the data as an array of price objects
 
-## Frontend Compatibility
+## Frontend Implementation
 
-The frontend application supports both formats:
+The frontend application processes the API response:
 
 ```javascript
-// Handle both API formats
+const response = await fetchElectricityPricesFromDB();
+if (response === null) return;
+
+const responseData = await response.json();
+let pricesData = responseData;
+
+// Process array data format
 if (Array.isArray(responseData)) {
-    // Original format - direct array
-    pricesData = responseData;
     priceTime = pricesData.map(entry => new Date(entry.priceTime));
     prices = pricesData.map(entry => entry.price);
-} else if (responseData.prices && Array.isArray(responseData.prices)) {
-    // New format with prices array
+} 
+// Handle direct API responses from external sources during development
+else if (responseData.prices && Array.isArray(responseData.prices)) {
     pricesData = responseData.prices;
     priceTime = pricesData.map(entry => new Date(entry.startDate));
     prices = pricesData.map(entry => entry.price);
@@ -99,6 +102,4 @@ Table: PPElectricityPricesTable
 - price (number): The electricity price
 - priceTime (string): ISO date string for when the price is valid
 - timestamp (number): Unix timestamp in milliseconds
-```
-
-No changes have been made to the database schema or structure. The Lambda functions that interact with the database still use the original format. 
+``` 
