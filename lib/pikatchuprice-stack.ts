@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { ArnPrincipal, Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -15,6 +15,7 @@ export class PikatchupriceStack extends cdk.Stack {
     const websiteBucket = new Bucket(this, 'PikatchuPriceBucket', {
       websiteIndexDocument: 'index.html',
       publicReadAccess: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
     });
 
     const bucketPolicy = new PolicyStatement({
@@ -32,7 +33,7 @@ export class PikatchupriceStack extends cdk.Stack {
     });
 
     const fetchPricesLambda = new lambda.Function(this, 'fetchPricesFunction', {
-      runtime: lambda.Runtime.NODEJS_16_X,
+      runtime: lambda.Runtime.NODEJS_LATEST,
       handler: 'fetchPrices.handler',
       code: lambda.Code.fromAsset('lambda'),
     });
