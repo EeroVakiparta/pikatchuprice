@@ -25,6 +25,7 @@ Comprehensive documentation is available in the [docs](./docs) directory:
 - [CDK Deployment Guide](./docs/cdk-deployment-guide.md) - Instructions for deploying the application
 - [Versioning Options](./docs/versioning-options.md) - Information on versioning strategies
 - [Commit Guidelines](./docs/commit-guidelines.md) - Standards for commit messages
+- [Branching Strategy](./docs/branching-strategy.md) - Git branching workflow for development
 
 ## Getting Started
 
@@ -48,6 +49,17 @@ Comprehensive documentation is available in the [docs](./docs) directory:
    ```
    npm run cdk deploy
    ```
+
+## Development Workflow
+
+PikatchuPrice follows a Git Flow-inspired branching strategy:
+
+1. Create features in dedicated branches (`feature/*`) from the `develop` branch
+2. Submit pull requests to merge completed features into `develop`
+3. Periodically merge stable `develop` code into `main` for deployment
+4. Use hotfix branches (`hotfix/*`) for urgent production fixes
+
+See the [Branching Strategy](./docs/branching-strategy.md) document for complete details.
 
 ## GitHub Actions CI/CD Setup
 
