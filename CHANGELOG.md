@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.0.0...v1.1.0) (2025-04-19)
+
+
+### Features
+
+* Add weather component for Tampere and fix README live site link ([74ca0a8](https://github.com/EeroVakiparta/pikatchuprice/commit/74ca0a89152a7e392745535d66016f11b8eade0d))
+
 # 1.0.0 (2025-04-19)
 
 
