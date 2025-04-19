@@ -87,10 +87,9 @@ jobs:
 
     - name: Generate CHANGELOG
       id: changelog
-      uses: conventional-changelog/action@v1.4.1
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        output-file: 'CHANGELOG.md'
+      run: |
+        npm install -g conventional-changelog-cli
+        conventional-changelog -p angular -i CHANGELOG.md -s
 
     - name: Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
