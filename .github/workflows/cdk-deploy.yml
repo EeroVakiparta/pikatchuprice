@@ -48,24 +48,57 @@ jobs:
 
     - name: Configure AWS credentials
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-north-1
+        role-duration-seconds: 1200
+        mask-aws-account-id: true
 
-    - name: Verify AWS credentials
+    - name: Debug AWS credentials
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
-        echo "Checking AWS credentials configuration..."
-        # Use set -e to fail the workflow if credentials aren't valid
-        set -e
-        aws sts get-caller-identity
-        echo "AWS credentials verified successfully"
+        echo "Checking AWS configuration..."
+        echo "AWS SDK Version Information:"
+        aws --version
+        
+        echo "Explicitly setting credentials in environment:"
+        # Don't actually echo real credentials, just check if they exist
+        if [ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+          echo "AWS_ACCESS_KEY_ID is set"
+        else
+          echo "AWS_ACCESS_KEY_ID is NOT set"
+        fi
+        
+        if [ -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+          echo "AWS_SECRET_ACCESS_KEY is set"
+        else
+          echo "AWS_SECRET_ACCESS_KEY is NOT set"
+        fi
+        
+        echo "Testing AWS credentials..."
+        aws sts get-caller-identity || (
+          echo "AWS credential check failed. Details:"
+          echo "Debug Credentials Provider Chain:"
+          # Add debugging but don't expose actual credentials
+          AWS_SDK_LOAD_CONFIG=1 NODE_DEBUG=credentials node -e "
+            const AWS = require('aws-sdk');
+            console.log('Initializing AWS SDK with default credentials provider chain');
+            const sts = new AWS.STS();
+            sts.getCallerIdentity().promise()
+              .then(data => console.log('Success: ' + JSON.stringify(data)))
+              .catch(err => console.error('Error: ' + err.message));
+          "
+          exit 1
+        )
 
     - name: CDK Synth
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      run: npx cdk synth
+      run: |
+        # Ensure credentials are available for synth
+        export AWS_SDK_LOAD_CONFIG=1
+        npx cdk synth
 
     - name: CDK Deploy
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
