@@ -120,4 +120,42 @@ If you need to debug GitHub Actions:
 gh workflow run "Deploy PikatchuPrice CDK Stack" --debug
 ```
 
+## PowerShell Troubleshooting
+
+If GitHub CLI is installed but the `gh` command is not recognized in PowerShell, try these solutions:
+
+### Solution 1: Restart PowerShell/Terminal
+
+The simplest solution is to close and reopen your PowerShell window or terminal after installation.
+
+### Solution 2: Manual PATH Refresh
+
+If restarting doesn't work, you can refresh your PATH variable manually:
+
+```powershell
+# Refresh the PATH in the current PowerShell session
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+```
+
+### Solution 3: Check Installation Directory
+
+Verify the GitHub CLI is installed in one of these locations:
+- `C:\Program Files\GitHub CLI\`
+- `C:\Users\<YourUsername>\AppData\Local\GitHub CLI\`
+
+Add the correct path manually if needed:
+
+```powershell
+# Add GitHub CLI to your PATH
+$env:Path += ";C:\Program Files\GitHub CLI\"
+```
+
+### Solution 4: Run in New Process
+
+If all else fails, you can explicitly run in a new PowerShell process:
+
+```powershell
+Start-Process powershell -ArgumentList "-Command", "gh run list -R EeroVakiparta/pikatchuprice" -NoNewWindow -Wait
+```
+
 For more information on using GitHub CLI, refer to the [official documentation](https://cli.github.com/manual/). 
