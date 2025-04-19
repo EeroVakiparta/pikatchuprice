@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.1.0...v1.1.1) (2025-04-19)
+
+
+### Bug Fixes
+
+* Update GitHub Actions workflow to upload version.json to S3 after release ([1ab65fd](https://github.com/EeroVakiparta/pikatchuprice/commit/1ab65fd5e927151fea0b8ff407325a96d2d92385))
+
 # [1.1.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.0.0...v1.1.0) (2025-04-19)
 
 
