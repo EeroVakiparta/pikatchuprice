@@ -25,33 +25,97 @@
             }
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            padding-top: 60px;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0, 0, 0);
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-        }
-
-        .modal-content input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 20px 0;
+        .info-link {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+            margin-top: 10px;
             display: inline-block;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
+        }
+        
+        .info-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Weather component styles */
+        #weatherContainer {
+            background-color: #f0f8ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 550px;
+        }
+
+        #weatherContainer h2 {
+            margin-top: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .weather-card {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .current-temp {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .weather-details {
+            flex-grow: 1;
+        }
+
+        .weather-icon {
+            font-size: 2.5em;
+            margin-left: 15px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .forecast-items {
+            display: flex;
+            overflow-x: auto;
+            margin-top: 15px;
+            padding-bottom: 10px;
+        }
+
+        .forecast-item {
+            min-width: 80px;
+            text-align: center;
+            padding: 8px;
+            border-right: 1px solid #eee;
+        }
+
+        .forecast-item:last-child {
+            border-right: none;
+        }
+
+        .forecast-time {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .forecast-temp {
+            font-size: 1.1em;
+            margin: 5px 0;
+        }
+
+        .forecast-desc {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        #weatherError {
+            color: #d9534f;
+            font-style: italic;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -63,33 +127,40 @@
 
     <h1>Electricity Prices</h1>
 
-    <div id="subscriptionMessage"></div>
-    <!-- Subscription Modal -->
-    <div id="subscriptionModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <form id="subscriptionForm">
-                <label for="userId">User ID:</label>
-                <input type="text" id="userId" name="userId" required><br><br>
-                <label for="phoneNumber">Phone Number:</label>
-                <input type="text" id="phoneNumber" name="phoneNumber" required><br><br>
-                <button type="submit" id="subscribeBtn">Subscribe</button>
-                <button type="button" id="unsubscribeBtn">Unsubscribe</button>
-                <button type="button" id="backBtn">Back</button>
-            </form>
+    <!-- Weather Section Start -->
+    <div id="weatherContainer">
+        <h2>Today's Weather in Tampere (Kissanmaa)</h2>
+        <div id="weatherContent">
+            <div id="weatherLoading">Loading weather data...</div>
+            <div id="weatherError" style="display: none;"></div>
+            <div id="weatherCard" style="display: none;" class="weather-card">
+                <div class="current-temp" id="currentTemp"></div>
+                <div class="weather-details">
+                    <div id="weatherDescription"></div>
+                    <div id="tempHighLow"></div>
+                    <div id="precipitation"></div>
+                    <div id="wind"></div>
+                </div>
+                <div class="weather-icon" id="weatherIcon"></div>
+            </div>
+        </div>
+        <div id="forecastContainer">
+            <h3>Today's Forecast</h3>
+            <div id="forecastItems" class="forecast-items"></div>
         </div>
     </div>
+    <!-- Weather Section End -->
+
+    <div id="infoMessage"></div>
+    
     <button id="refreshButton">Refresh Data</button>
     <p id="lastRefreshTime">Last Refresh: N/A</p>
 
     <div id="chartContainer">
         <canvas id="priceChart"></canvas>
         <p id="versionInfo">v0.1</p>
-        <button id="subscribeButton">Subscribe</button>
-
+        <a href="https://github.com/EeroVakiparta/pikatchuprice/blob/main/docs/deprecated-features.md" class="info-link">About notifications</a>
     </div>
-
-
 
     <script>
         let lastRefresh = 'N/A';
@@ -113,6 +184,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             fetchData();
             fetchVersionInfo();
+            fetchWeatherData();
         });
 
         async function fetchData() {
@@ -257,71 +329,186 @@
         const refreshButton = document.getElementById('refreshButton');
         refreshButton.addEventListener('click', function () {
             fetchData();
+            fetchWeatherData();
         });
 
-        // Get the modal
-        var modal = document.getElementById("subscriptionModal");
-
-        // Get the button that opens the modal
-        var btn = document.getElementById("subscribeButton");
-
-        // Get the <span> element that closes the modal
-        var span = document.getElementsByClassName("close")[0];
-
-        // When the user clicks the button, open the modal
-        btn.onclick = function () {
-            modal.style.display = "block";
-        }
-
-        // When the user clicks on <span> (x), close the modal
-        span.onclick = function () {
-            modal.style.display = "none";
-        }
-
-        // When the user clicks anywhere outside of the modal, close it
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-
-        // Async function to handle form submission
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            var userId = document.getElementById('userId').value;
-            var phoneNumber = document.getElementById('phoneNumber').value;
-
-            // Prepare the request payload
-            var payload = {
-                userId: userId,
-                phoneNumber: phoneNumber
-            };
+        // Weather Component Functions
+        async function fetchWeatherData() {
+            // Coordinates for Tampere, Kissanmaa (33530)
+            const TAMPERE_LAT = 61.4937;
+            const TAMPERE_LON = 23.8283;
+            const weatherLoading = document.getElementById('weatherLoading');
+            const weatherError = document.getElementById('weatherError');
+            const weatherCard = document.getElementById('weatherCard');
 
             try {
-                const response = await fetch('https://ni86it04va.execute-api.eu-north-1.amazonaws.com/prod/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
+                weatherLoading.style.display = 'block';
+                weatherError.style.display = 'none';
+                weatherCard.style.display = 'none';
 
+                // Create URL for Open-Meteo API
+                const apiUrl = new URL('https://api.open-meteo.com/v1/forecast');
+                apiUrl.searchParams.append('latitude', TAMPERE_LAT);
+                apiUrl.searchParams.append('longitude', TAMPERE_LON);
+                apiUrl.searchParams.append('current', 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day');
+                apiUrl.searchParams.append('hourly', 'temperature_2m,precipitation_probability,weather_code');
+                apiUrl.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,sunrise,sunset');
+                apiUrl.searchParams.append('timezone', 'Europe/Helsinki');
+                
+                // Fetch data from API
+                const response = await fetch(apiUrl);
+                
                 if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
+                    throw new Error(`Weather API error: ${response.status}`);
                 }
-
-                const responseData = await response.json();
-                document.getElementById('subscriptionMessage').textContent = responseData.message;
-                modal.style.display = "none";  // Hide the modal after success
-
+                
+                const data = await response.json();
+                
+                // Display the weather data
+                displayWeatherData(data);
+                
+                weatherLoading.style.display = 'none';
+                weatherCard.style.display = 'flex';
             } catch (error) {
-                console.error('There has been a problem with your fetch operation:', error);
+                console.error('Error fetching weather data:', error);
+                weatherLoading.style.display = 'none';
+                weatherError.style.display = 'block';
+                weatherError.textContent = `Failed to load weather data: ${error.message}`;
             }
         }
 
-        // Handle form submission
-        document.getElementById('subscriptionForm').addEventListener('submit', handleFormSubmit);
+        function displayWeatherData(data) {
+            // Display current weather
+            if (data.current) {
+                const currentElement = document.getElementById('currentTemp');
+                const descriptionElement = document.getElementById('weatherDescription');
+                const tempHighLowElement = document.getElementById('tempHighLow');
+                const precipitationElement = document.getElementById('precipitation');
+                const windElement = document.getElementById('wind');
+                const weatherIconElement = document.getElementById('weatherIcon');
+                
+                // Format current temperature
+                currentElement.textContent = `${Math.round(data.current.temperature_2m)}°C`;
+                
+                // Display weather description based on weather code
+                const weatherDescription = getWeatherDescription(data.current.weather_code);
+                descriptionElement.textContent = weatherDescription;
+                
+                // Display high/low temps
+                if (data.daily && data.daily.temperature_2m_max && data.daily.temperature_2m_min) {
+                    const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
+                    const minTemp = Math.round(data.daily.temperature_2m_min[0]);
+                    tempHighLowElement.textContent = `High: ${maxTemp}°C / Low: ${minTemp}°C`;
+                }
+                
+                // Display wind information
+                windElement.textContent = `Wind: ${Math.round(data.current.wind_speed_10m)} km/h`;
+                
+                // Display weather icon
+                weatherIconElement.innerHTML = getWeatherIcon(data.current.weather_code, data.current.is_day);
+            }
+            
+            // Display hourly forecast for today
+            if (data.hourly) {
+                const forecastItems = document.getElementById('forecastItems');
+                forecastItems.innerHTML = '';
+                
+                const now = new Date();
+                const nowHour = now.getHours();
+                
+                // Only display forecast for the rest of today, starting from next hour
+                const startIndex = nowHour + 1;
+                const endIndex = Math.min(nowHour + 13, 24);  // Show up to 12 hours ahead but not more than midnight
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const time = new Date(data.hourly.time[i]);
+                    const temp = Math.round(data.hourly.temperature_2m[i]);
+                    const weatherCode = data.hourly.weather_code[i];
+                    const precipProb = data.hourly.precipitation_probability[i];
+                    const isDay = time.getHours() >= 6 && time.getHours() <= 18;  // Simple day/night check
+                    
+                    const forecastItem = document.createElement('div');
+                    forecastItem.className = 'forecast-item';
+                    forecastItem.innerHTML = `
+                        <div class="forecast-time">${time.getHours()}:00</div>
+                        <div class="forecast-icon">${getWeatherIcon(weatherCode, isDay, true)}</div>
+                        <div class="forecast-temp">${temp}°C</div>
+                        <div class="forecast-desc">${precipProb > 0 ? `${precipProb}% precip.` : 'No precip.'}</div>
+                    `;
+                    
+                    forecastItems.appendChild(forecastItem);
+                }
+            }
+        }
 
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: 'Clear sky',
+                1: 'Mainly clear',
+                2: 'Partly cloudy',
+                3: 'Overcast',
+                45: 'Fog',
+                48: 'Depositing rime fog',
+                51: 'Light drizzle',
+                53: 'Moderate drizzle',
+                55: 'Dense drizzle',
+                56: 'Light freezing drizzle',
+                57: 'Dense freezing drizzle',
+                61: 'Slight rain',
+                63: 'Moderate rain',
+                65: 'Heavy rain',
+                66: 'Light freezing rain',
+                67: 'Heavy freezing rain',
+                71: 'Slight snow fall',
+                73: 'Moderate snow fall',
+                75: 'Heavy snow fall',
+                77: 'Snow grains',
+                80: 'Slight rain showers',
+                81: 'Moderate rain showers',
+                82: 'Violent rain showers',
+                85: 'Slight snow showers',
+                86: 'Heavy snow showers',
+                95: 'Thunderstorm',
+                96: 'Thunderstorm with slight hail',
+                99: 'Thunderstorm with heavy hail'
+            };
+            
+            return weatherCodes[code] || `Unknown (${code})`;
+        }
+
+        function getWeatherIcon(code, isDay, isSmall = false) {
+            // Simple text-based icons based on weather code
+            const size = isSmall ? '1.2em' : '1.8em';
+            
+            // Map weather codes to unicode icons
+            if (code === 0) {
+                return isDay 
+                    ? `<span style="font-size:${size}; color:#FFD700;">☀️</span>` // Clear sky day
+                    : `<span style="font-size:${size}; color:#E0E0E0;">🌙</span>`; // Clear sky night
+            } else if (code === 1 || code === 2) {
+                return isDay
+                    ? `<span style="font-size:${size}; color:#FFD700;">⛅</span>` // Partly cloudy day
+                    : `<span style="font-size:${size}; color:#E0E0E0;">☁️</span>`; // Partly cloudy night
+            } else if (code === 3) {
+                return `<span style="font-size:${size}; color:#A9A9A9;">☁️</span>`; // Overcast
+            } else if (code === 45 || code === 48) {
+                return `<span style="font-size:${size}; color:#D3D3D3;">🌫️</span>`; // Fog
+            } else if (code >= 51 && code <= 57) {
+                return `<span style="font-size:${size}; color:#ADD8E6;">🌧️</span>`; // Drizzle
+            } else if (code >= 61 && code <= 67) {
+                return `<span style="font-size:${size}; color:#4682B4;">🌧️</span>`; // Rain
+            } else if (code >= 71 && code <= 77) {
+                return `<span style="font-size:${size}; color:#E0FFFF;">❄️</span>`; // Snow
+            } else if (code >= 80 && code <= 82) {
+                return `<span style="font-size:${size}; color:#4682B4;">🌦️</span>`; // Rain showers
+            } else if (code >= 85 && code <= 86) {
+                return `<span style="font-size:${size}; color:#E0FFFF;">🌨️</span>`; // Snow showers
+            } else if (code >= 95) {
+                return `<span style="font-size:${size}; color:#B22222;">⛈️</span>`; // Thunderstorm
+            } else {
+                return `<span style="font-size:${size}; color:#808080;">❓</span>`; // Unknown
+            }
+        }
     </script>
 </body>
 

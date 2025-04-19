@@ -10,7 +10,7 @@ PikatchuPrice (aka PP) is an AWS-based system for monitoring electricity prices,
 
 ## 🔴 Live Site
 
-**[Visit the live PikatchuPrice application](https://d1cqmfgukudrxq.cloudfront.net)** - Check electricity prices in real-time
+**[Visit the live PikatchuPrice application](http://pikatchupricestack-pikatchupricebucket69d94924-5i7w033szcqk.s3-website.eu-north-1.amazonaws.com/)** - Check electricity prices in real-time
 
 ## Features
 
