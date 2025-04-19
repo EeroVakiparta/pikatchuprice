@@ -14,35 +14,29 @@ export const handler = async (event: any): Promise<any> => {
           // Parse the original data
           const jsonData = JSON.parse(data);
           
-          // Create the new format with prices array
-          const newFormat = {
-            prices: jsonData.prices.map((price: any) => ({
-              price: price.price,
-              startDate: price.startDate,
-              endDate: price.endDate
-            }))
-          };
+          // Extract the prices array from the response
+          const pricesArray = jsonData.prices || [];
           
-          // Return both formats for backward compatibility
-          // This includes all the data properties from the original format 
-          // but also includes the new 'prices' array property
-          const backwardCompatibleData = {
-            ...jsonData,
-            ...newFormat
-          };
+          // Convert the data to match our application format
+          const appFormatData = pricesArray.map((price: any) => ({
+            price: price.price,
+            priceTime: price.startDate,
+            timestamp: new Date(price.startDate).getTime()
+          }));
           
           resolve({
             statusCode: 200,
             headers: {
               'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json'
             },
-            body: JSON.stringify(backwardCompatibleData),
+            body: JSON.stringify(appFormatData)
           });
         } catch (err) {
           console.error('Error processing data:', err);
           reject({
             statusCode: 500,
-            body: 'Failed to process data',
+            body: JSON.stringify({ message: 'Failed to process data' })
           });
         }
       });
@@ -52,7 +46,7 @@ export const handler = async (event: any): Promise<any> => {
       console.error('Error fetching data:', error);
       reject({
         statusCode: 500,
-        body: 'Failed to fetch data',
+        body: JSON.stringify({ message: 'Failed to fetch data' })
       });
     });
   });

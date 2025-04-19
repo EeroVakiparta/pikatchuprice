@@ -125,18 +125,18 @@
 
             const responseData = await response.json();
             
-            // Handle both API formats: the original format and the new format with prices array
+            // Handle response format based on data structure
             let pricesData;
             let priceTime;
             let prices;
             
             if (Array.isArray(responseData)) {
-                // Original format - direct array
+                // Standard array format from our API
                 pricesData = responseData;
                 priceTime = pricesData.map(entry => new Date(entry.priceTime));
                 prices = pricesData.map(entry => entry.price);
             } else if (responseData.prices && Array.isArray(responseData.prices)) {
-                // New format with prices array
+                // Format with nested prices array (direct from external API)
                 pricesData = responseData.prices;
                 priceTime = pricesData.map(entry => new Date(entry.startDate));
                 prices = pricesData.map(entry => entry.price);
