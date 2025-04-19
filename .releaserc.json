@@ -1,10 +1,31 @@
 {
   "branches": ["main"],
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "angular",
+        "releaseRules": [
+          {"type": "docs", "scope": "README", "release": "patch"},
+          {"type": "fix", "release": "patch"},
+          {"type": "feat", "release": "minor"},
+          {"type": "perf", "release": "patch"}
+        ]
+      }
+    ],
     "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
-    "@semantic-release/npm",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ],
     [
       "@semantic-release/git",
       {
@@ -19,7 +40,14 @@
     [
       "@semantic-release/exec", 
       {
-        "successCmd": "node -e \"const fs=require('fs');const pkg=require('./package.json');const data={version:pkg.version,buildDate:new Date().toISOString()};fs.writeFileSync('./public/version.json',JSON.stringify(data,null,2));\""
+        "prepareCmd": "node -e \"const fs=require('fs');const pkg=require('./package.json');const data={version:pkg.version,buildDate:new Date().toISOString()};fs.writeFileSync('./public/version.json',JSON.stringify(data,null,2));\"",
+        "successCmd": "echo 'Version bump to ${nextRelease.version} was successful!'"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": []
       }
     ]
   ]
