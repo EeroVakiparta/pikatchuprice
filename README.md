@@ -1,7 +1,7 @@
 # PikatchuPrice - Electricity Price Monitoring
 
 <p align="center">
-  <img src="public/pikachu.png" alt="Pikachu" width="250"/>
+  <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" alt="Pikachu" width="250"/>
 </p>
 
 PikatchuPrice (aka PP) is an AWS-based system for monitoring electricity prices, providing real-time price data visualization and price alert notifications through a serverless architecture.
