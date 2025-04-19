@@ -1,0 +1,24 @@
+# Project Code Owners
+# This file determines who should be consulted for reviews
+
+# Default owners for everything
+* @EeroVakiparta
+
+# Lambda function owners
+/lambda/ @EeroVakiparta
+
+# Infrastructure as code
+/lib/ @EeroVakiparta
+/bin/ @EeroVakiparta
+
+# Frontend code
+/public/ @EeroVakiparta
+
+# Documentation
+/docs/ @EeroVakiparta
+
+# AI Guidelines - When updating, consider impact on AI assistants
+/.cursor/ @EeroVakiparta
+
+# CI/CD Pipeline
+/.github/workflows/ @EeroVakiparta 
