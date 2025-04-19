@@ -8,7 +8,8 @@ Welcome to the PikatchuPrice documentation. This guide will help you understand 
 2. [CDK Deployment Guide](./cdk-deployment-guide.md)
 3. [Versioning Options](./versioning-options.md)
 4. [Commit Guidelines](./commit-guidelines.md)
-5. [GitHub Secrets Setup](./github-secrets-setup.md)
+5. [GitHub Secrets Setup](./github-secrets.md)
+6. [API Response Format](./api-response-format.md)
 
 ## Project Overview
 
