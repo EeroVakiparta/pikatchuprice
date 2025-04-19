@@ -58,6 +58,16 @@
       "Check version.json is properly updated with version information"
     ],
     
+    "branching_strategy": [
+      "Follow Git Flow with simplified branch structure (main, develop, feature/*, hotfix/*)",
+      "Main branch contains production-ready code and is deployed automatically",
+      "Develop branch is an integration branch where features are merged first",
+      "Feature branches are created from develop using format 'feature/descriptive-name'",
+      "Hotfix branches are created from main for urgent fixes using format 'hotfix/descriptive-name'",
+      "All merges to main and develop should be done via pull requests with reviews",
+      "Refer to docs/branching-strategy.md for detailed branching workflow"
+    ],
+    
     "common_issues": [
       "Backward compatibility problems with API responses",
       "Missing AWS credentials for deployment",
