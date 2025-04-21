@@ -7,6 +7,10 @@ class FuelPriceComponent {
     this.hasError = false;
     this.errorMessage = '';
     this.lastUpdate = null;
+    
+    // Set API configurations to use live data
+    localStorage.setItem('FUEL_API_DEPLOYED', 'true');
+    localStorage.setItem('FUEL_API_GATEWAY_URL', 'https://jlz510q880.execute-api.eu-north-1.amazonaws.com/prod/');
   }
 
   // Initialize the component
@@ -290,12 +294,12 @@ class FuelPriceComponent {
       const latitude = localStorage.getItem('userLat') || '61.4937';
       const longitude = localStorage.getItem('userLon') || '23.8283';
       
-      // Check if we're in development mode (API not deployed yet)
-      const isDevelopment = !localStorage.getItem('FUEL_API_DEPLOYED');
+      // Check if we're using the live API
+      const isLiveApi = localStorage.getItem('FUEL_API_DEPLOYED') === 'true';
       
       let data = { stations: [] };
       
-      if (isDevelopment) {
+      if (!isLiveApi) {
         // Use mock data for development
         console.log('Using mock fuel price data for development');
         
@@ -305,15 +309,25 @@ class FuelPriceComponent {
         // Mock data based on user location
         data = this.getMockData(latitude, longitude);
       } else {
+        // Get the API Gateway URL from localStorage
+        const apiGatewayUrl = localStorage.getItem('FUEL_API_GATEWAY_URL');
+        
+        if (!apiGatewayUrl) {
+          throw new Error('API Gateway URL not configured');
+        }
+        
+        console.log(`Calling fuel prices API: ${apiGatewayUrl}`);
+        
         // Call the actual API
-        const apiGatewayUrl = localStorage.getItem('FUEL_API_GATEWAY_URL') || 'https://API_GATEWAY_URL/prod/fuel-prices';
         const response = await fetch(`${apiGatewayUrl}?latitude=${latitude}&longitude=${longitude}`);
         
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `API error: ${response.status}`);
         }
         
         data = await response.json();
+        console.log('API response:', data);
       }
       
       // Update component state
@@ -324,12 +338,39 @@ class FuelPriceComponent {
       
       // Update UI
       this.updateUI();
+      
+      // Store successful API use
+      if (isLiveApi) {
+        localStorage.setItem('FUEL_API_LAST_SUCCESS', new Date().toISOString());
+      }
     } catch (error) {
       console.error('Error fetching fuel prices:', error);
       this.isLoading = false;
       this.hasError = true;
       this.errorMessage = error.message || 'Failed to load fuel prices';
       this.updateUI();
+      
+      // If API failed, try reverting to mock data
+      if (localStorage.getItem('FUEL_API_DEPLOYED') === 'true') {
+        console.log('API failed, falling back to mock data');
+        try {
+          // Get user location from localStorage
+          const latitude = localStorage.getItem('userLat') || '61.4937';
+          const longitude = localStorage.getItem('userLon') || '23.8283';
+          
+          // Use mock data
+          const mockData = this.getMockData(latitude, longitude);
+          
+          // Update component state
+          this.stations = mockData.stations || [];
+          this.lastUpdate = new Date();
+          this.hasError = false;
+          this.errorMessage = '';
+          this.updateUI();
+        } catch (fallbackError) {
+          console.error('Even fallback data failed:', fallbackError);
+        }
+      }
     }
   }
   
