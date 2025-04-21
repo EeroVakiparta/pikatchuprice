@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <title>Pikatchu Prices (aka. PP)</title>
     <style>
         #refreshButton {
@@ -31,10 +31,17 @@
             text-decoration: none;
             margin-top: 10px;
             display: inline-block;
+            transition: color 0.3s ease;
         }
         
         .info-link:hover {
             text-decoration: underline;
+            color: #4682b4;
+        }
+
+        .info-link i {
+            margin-right: 4px;
+            font-size: 16px;
         }
 
         /* Weather component styles */
@@ -200,6 +207,7 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -252,7 +260,7 @@
                 New version available! Click to update
             </span>
         </div>
-        <a href="https://github.com/EeroVakiparta/pikatchuprice/blob/main/docs/deprecated-features.md" class="info-link">About notifications</a>
+        <a href="https://github.com/EeroVakiparta/pikatchuprice" class="info-link"><i class="fab fa-github"></i> View on GitHub</a>
     </div>
 
     <script>
