@@ -690,6 +690,9 @@
                         
                         // Update weather with new location
                         fetchWeatherData();
+                        
+                        // Dispatch event to notify other components that location was updated
+                        document.dispatchEvent(new CustomEvent('userLocationUpdated'));
                     },
                     // Error callback
                     function(error) {

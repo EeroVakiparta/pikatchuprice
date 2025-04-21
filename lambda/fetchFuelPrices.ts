@@ -79,8 +79,13 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         timestamp: new Date().toISOString(),
       }),
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching fuel prices:', error);
+    
+    // Convert error to an object with a message property
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'Unknown error occurred';
     
     return {
       statusCode: 500,
@@ -90,7 +95,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       },
       body: JSON.stringify({
         message: 'Error fetching fuel prices',
-        error: error.message,
+        error: errorMessage,
       }),
     };
   }
