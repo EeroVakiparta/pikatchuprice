@@ -117,6 +117,48 @@
             color: #d9534f;
             font-style: italic;
         }
+
+        /* Location styles */
+        #locationContainer {
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 550px;
+        }
+
+        #locationInfo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        #locationInfo p {
+            margin: 5px 0;
+            flex-grow: 1;
+        }
+
+        #userLocation {
+            font-weight: bold;
+            color: #4682b4;
+        }
+
+        #updateLocationButton {
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #updateLocationButton:hover {
+            background-color: #36648b;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -127,9 +169,17 @@
 
     <h1>Electricity Prices</h1>
 
+    <!-- User Location Section -->
+    <div id="locationContainer">
+        <div id="locationInfo">
+            <p>Your location: <span id="userLocation">Not detected</span></p>
+            <button id="updateLocationButton">Update Location</button>
+        </div>
+    </div>
+
     <!-- Weather Section Start -->
     <div id="weatherContainer">
-        <h2>Today's Weather in Tampere (Kissanmaa)</h2>
+        <h2 id="weatherLocationTitle">Today's Weather</h2>
         <div id="weatherContent">
             <div id="weatherLoading">Loading weather data...</div>
             <div id="weatherError" style="display: none;"></div>
@@ -184,7 +234,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             fetchData();
             fetchVersionInfo();
+            checkUserLocation();
             fetchWeatherData();
+            
+            // Set up event listener for location update button
+            document.getElementById('updateLocationButton').addEventListener('click', function() {
+                getUserLocation();
+            });
         });
 
         async function fetchData() {
@@ -317,9 +373,9 @@
 
         }
         function updateLastRefreshTime() {
-            lastRefresh = new Date().toLocaleTimeString();
-            const lastRefreshTime = document.getElementById('lastRefreshTime');
-            lastRefreshTime.textContent = `Last Refresh: ${lastRefresh}`;
+            const now = new Date();
+            lastRefresh = now.toLocaleTimeString();
+            document.getElementById('lastRefreshTime').textContent = `Last Refresh: ${lastRefresh}`;
         }
 
         window.addEventListener('focus', function () {
@@ -334,9 +390,15 @@
 
         // Weather Component Functions
         async function fetchWeatherData() {
-            // Coordinates for Tampere, Kissanmaa (33530)
-            const TAMPERE_LAT = 61.4937;
-            const TAMPERE_LON = 23.8283;
+            // Get location from localStorage or use default Tampere coordinates
+            let latitude = localStorage.getItem('userLat') || 61.4937;
+            let longitude = localStorage.getItem('userLon') || 23.8283;
+            let locationName = localStorage.getItem('userLocationName') || 'Tampere, Kissanmaa';
+            
+            // Update the location display
+            document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)})`;
+            document.getElementById('weatherLocationTitle').textContent = `Today's Weather in ${locationName}`;
+            
             const weatherLoading = document.getElementById('weatherLoading');
             const weatherError = document.getElementById('weatherError');
             const weatherCard = document.getElementById('weatherCard');
@@ -348,8 +410,8 @@
 
                 // Create URL for Open-Meteo API
                 const apiUrl = new URL('https://api.open-meteo.com/v1/forecast');
-                apiUrl.searchParams.append('latitude', TAMPERE_LAT);
-                apiUrl.searchParams.append('longitude', TAMPERE_LON);
+                apiUrl.searchParams.append('latitude', latitude);
+                apiUrl.searchParams.append('longitude', longitude);
                 apiUrl.searchParams.append('current', 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day');
                 apiUrl.searchParams.append('hourly', 'temperature_2m,precipitation_probability,weather_code');
                 apiUrl.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,sunrise,sunset');
@@ -507,6 +569,104 @@
                 return `<span style="font-size:${size}; color:#B22222;">⛈️</span>`; // Thunderstorm
             } else {
                 return `<span style="font-size:${size}; color:#808080;">❓</span>`; // Unknown
+            }
+        }
+
+        // Geolocation Functions
+        function checkUserLocation() {
+            // Check if we already have the user's location stored
+            const hasStoredLocation = localStorage.getItem('userLat') && localStorage.getItem('userLon');
+            
+            if (!hasStoredLocation) {
+                // If no stored location, try to get it automatically
+                getUserLocation();
+            } else {
+                // Update the location display
+                const lat = localStorage.getItem('userLat');
+                const lon = localStorage.getItem('userLon');
+                const locationName = localStorage.getItem('userLocationName') || 'Your Location';
+                document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
+            }
+        }
+        
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('userLocation').textContent = 'Detecting location...';
+                
+                navigator.geolocation.getCurrentPosition(
+                    // Success callback
+                    function(position) {
+                        const latitude = position.coords.latitude.toString();
+                        const longitude = position.coords.longitude.toString();
+                        
+                        // Store the location in localStorage
+                        localStorage.setItem('userLat', latitude);
+                        localStorage.setItem('userLon', longitude);
+                        
+                        // Try to get location name using reverse geocoding
+                        reverseGeocode(latitude, longitude);
+                        
+                        // Update weather with new location
+                        fetchWeatherData();
+                    },
+                    // Error callback
+                    function(error) {
+                        console.error('Geolocation error:', error);
+                        document.getElementById('userLocation').textContent = 'Location detection failed';
+                        
+                        // Fall back to default location
+                        if (!localStorage.getItem('userLat')) {
+                            localStorage.setItem('userLat', '61.4937');
+                            localStorage.setItem('userLon', '23.8283');
+                            localStorage.setItem('userLocationName', 'Tampere, Kissanmaa');
+                        }
+                    },
+                    // Options
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                document.getElementById('userLocation').textContent = 'Geolocation not supported';
+            }
+        }
+        
+        async function reverseGeocode(lat, lon) {
+            try {
+                // Use OpenStreetMap Nominatim for reverse geocoding
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
+                const data = await response.json();
+                
+                // Extract location name
+                let locationName = 'Unknown Location';
+                
+                if (data.address) {
+                    if (data.address.city) {
+                        locationName = data.address.city;
+                    } else if (data.address.town) {
+                        locationName = data.address.town;
+                    } else if (data.address.village) {
+                        locationName = data.address.village;
+                    }
+                    
+                    // Add suburb/neighborhood if available
+                    if (data.address.suburb) {
+                        locationName += `, ${data.address.suburb}`;
+                    } else if (data.address.neighbourhood) {
+                        locationName += `, ${data.address.neighbourhood}`;
+                    }
+                }
+                
+                // Store and display the location name
+                localStorage.setItem('userLocationName', locationName);
+                document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
+                document.getElementById('weatherLocationTitle').textContent = `Today's Weather in ${locationName}`;
+                
+            } catch (error) {
+                console.error('Reverse geocoding error:', error);
+                document.getElementById('userLocation').textContent = `Location (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
             }
         }
     </script>
