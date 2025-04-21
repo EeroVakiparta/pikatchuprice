@@ -1,3 +1,11 @@
+## [1.4.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.4.0...v1.4.1) (2025-04-21)
+
+
+### Bug Fixes
+
+* add favicon link to index.html ([f4ede37](https://github.com/EeroVakiparta/pikatchuprice/commit/f4ede37f7afc02b2065b39c0eb8d88b37a02ae2e))
+* replace axios with native https in fetchFuelPrices lambda ([23a9467](https://github.com/EeroVakiparta/pikatchuprice/commit/23a9467151dcbe4e2415a53df27de9b145afd863))
+
 # [1.4.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.3.0...v1.4.0) (2025-04-21)
 
 
