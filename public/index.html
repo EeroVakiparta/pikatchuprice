@@ -159,6 +159,44 @@
         #updateLocationButton:hover {
             background-color: #36648b;
         }
+
+        /* Version notification styles */
+        #versionContainer {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        #versionInfo {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        #updateNotification {
+            display: none;
+            margin-left: 10px;
+            padding: 3px 8px;
+            background-color: #e6f3ff;
+            color: #4682b4;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            border: 1px solid #add8e6;
+            transition: all 0.3s ease;
+        }
+
+        #updateNotification:hover {
+            background-color: #4682b4;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -208,7 +246,12 @@
 
     <div id="chartContainer">
         <canvas id="priceChart"></canvas>
-        <p id="versionInfo">v0.1</p>
+        <div id="versionContainer">
+            <p id="versionInfo">v0.1</p>
+            <span id="updateNotification">
+                New version available! Click to update
+            </span>
+        </div>
         <a href="https://github.com/EeroVakiparta/pikatchuprice/blob/main/docs/deprecated-features.md" class="info-link">About notifications</a>
     </div>
 
@@ -224,9 +267,35 @@
                     const versionData = await response.json();
                     const versionElement = document.getElementById('versionInfo');
                     versionElement.textContent = `v${versionData.version}`;
+                    
+                    // Check if this is a new version
+                    checkForNewVersion(versionData.version);
                 }
             } catch (error) {
                 console.error('Error fetching version info:', error);
+            }
+        }
+
+        // Check if there's a new version available
+        function checkForNewVersion(currentVersion) {
+            const storedVersion = localStorage.getItem('appVersion');
+            const updateNotification = document.getElementById('updateNotification');
+            
+            if (!storedVersion) {
+                // First time visit, just store the version
+                localStorage.setItem('appVersion', currentVersion);
+            } else if (storedVersion !== currentVersion) {
+                // New version detected
+                updateNotification.style.display = 'inline';
+                
+                // Add click event to update notification
+                updateNotification.addEventListener('click', () => {
+                    // Update the stored version
+                    localStorage.setItem('appVersion', currentVersion);
+                    
+                    // Reload the page to apply the new version
+                    window.location.reload(true);
+                });
             }
         }
 
