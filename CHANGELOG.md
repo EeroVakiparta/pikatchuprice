@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.2.0...v1.3.0) (2025-04-21)
+
+
+### Features
+
+* add version update notification for PWA ([c0ffdf5](https://github.com/EeroVakiparta/pikatchuprice/commit/c0ffdf56668e80ee9ffe930743df3ebf0493b40b))
+
 # [1.2.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.1.1...v1.2.0) (2025-04-21)
 
 
