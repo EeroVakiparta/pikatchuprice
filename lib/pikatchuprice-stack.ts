@@ -38,8 +38,40 @@ export class PikatchupriceStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda'),
     });
     
-    new apigateway.LambdaRestApi(this, 'Endpoint', {
+    // Create API Gateway for electricity prices
+    const electricityApi = new apigateway.LambdaRestApi(this, 'Endpoint', {
       handler: fetchPricesLambda,
+    });
+
+    // Create Fuel Prices Lambda
+    const fetchFuelPricesLambda = new lambda.Function(this, 'fetchFuelPricesFunction', {
+      runtime: lambda.Runtime.NODEJS_LATEST,
+      handler: 'fetchFuelPrices.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment: {
+        TANKILLE_EMAIL: process.env.TANKILLE_EMAIL || '',
+        TANKILLE_PASSWORD: process.env.TANKILLE_PASSWORD || '',
+        DEFAULT_LATITUDE: '61.4937',
+        DEFAULT_LONGITUDE: '23.8283',
+      },
+      timeout: cdk.Duration.seconds(30),
+    });
+    
+    // Create API Gateway for fuel prices
+    const fuelApi = new apigateway.LambdaRestApi(this, 'FuelPricesEndpoint', {
+      handler: fetchFuelPricesLambda,
+      proxy: true,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
+    });
+    
+    // Output the API Gateway URL
+    new cdk.CfnOutput(this, 'FuelApiUrl', {
+      value: fuelApi.url,
+      description: 'The URL of the fuel prices API',
+      exportName: 'FuelApiUrl',
     });
   }
 }
