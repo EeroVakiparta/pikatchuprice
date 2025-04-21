@@ -1,3 +1,13 @@
+# [1.4.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.3.0...v1.4.0) (2025-04-21)
+
+
+### Features
+
+* add fuel prices integration skeleton ([d0bdbd3](https://github.com/EeroVakiparta/pikatchuprice/commit/d0bdbd37dbe1a1962ee80f28cc1caadb58107ff8))
+* add GitHub icon and fix manifest path ([66afea8](https://github.com/EeroVakiparta/pikatchuprice/commit/66afea8424ef5de104910c7b93b46326eac4d422))
+* Enable live fuel prices data via API Gateway ([9deae6a](https://github.com/EeroVakiparta/pikatchuprice/commit/9deae6a200cc8391d837d922dee845cf064b5192))
+* enhance fuel prices component with mock data, sorting, and improved UI ([fd26b84](https://github.com/EeroVakiparta/pikatchuprice/commit/fd26b841d6f9792a0bac8084c81f6fa487fb3e16))
+
 # [1.3.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.2.0...v1.3.0) (2025-04-21)
 
 
