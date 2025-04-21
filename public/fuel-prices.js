@@ -37,7 +37,7 @@ class FuelPriceComponent {
     fuelSection.id = 'fuelPricesContainer';
     fuelSection.className = 'fuel-prices-container';
     fuelSection.innerHTML = `
-      <h2><i class="fas fa-gas-pump"></i> Nearby Fuel Prices</h2>
+      <h2><i class="fas fa-gas-pump"></i> Nearby Fuel Prices <span class="fuel-subtitle">(Top 5 Stations)</span></h2>
       <div id="fuelSortControls" class="fuel-sort-controls">
         <span>Sort by:</span>
         <button class="sort-button active" data-sort="distance">Distance</button>
@@ -59,10 +59,10 @@ class FuelPriceComponent {
       <p id="fuelLastUpdateTime">Last Update: Never</p>
     `;
     
-    // Insert the component after the weather container
-    const weatherContainer = document.getElementById('weatherContainer');
-    if (weatherContainer && weatherContainer.parentNode) {
-      weatherContainer.parentNode.insertBefore(fuelSection, weatherContainer.nextSibling);
+    // Insert the component after the chart container instead of weather container
+    const chartContainer = document.getElementById('chartContainer');
+    if (chartContainer && chartContainer.parentNode) {
+      chartContainer.parentNode.insertBefore(fuelSection, chartContainer.nextSibling);
     } else {
       // Fallback to appending to body
       document.body.appendChild(fuelSection);
@@ -110,12 +110,28 @@ class FuelPriceComponent {
         color: #4682b4;
       }
       
+      .fuel-subtitle {
+        font-size: 0.7em;
+        color: #777;
+        margin-left: 10px;
+        font-weight: normal;
+      }
+      
       .fuel-sort-controls {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         margin-bottom: 15px;
         gap: 8px;
+      }
+      
+      .fuel-more-info {
+        text-align: center;
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px dashed #ddd;
       }
       
       .fuel-sort-controls span {
@@ -562,10 +578,21 @@ class FuelPriceComponent {
       return;
     }
     
-    // Render each station
-    this.stations.forEach(station => {
+    // Render only the top 5 stations
+    const stationsToShow = this.stations.slice(0, 5);
+    stationsToShow.forEach(station => {
       stationsListElement.appendChild(this.renderStation(station));
     });
+    
+    // Add message showing how many stations were filtered out
+    if (this.stations.length > 5) {
+      const totalStations = this.stations.length;
+      const hiddenStations = totalStations - 5;
+      const moreInfoElement = document.createElement('div');
+      moreInfoElement.className = 'fuel-more-info';
+      moreInfoElement.innerHTML = `Showing top 5 stations of ${totalStations} nearby.`;
+      stationsListElement.appendChild(moreInfoElement);
+    }
   }
 
   // Sort stations based on the selected criteria
