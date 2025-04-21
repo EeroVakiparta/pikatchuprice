@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.1.1...v1.2.0) (2025-04-21)
+
+
+### Features
+
+* add user location detection and personalized weather ([73d92f6](https://github.com/EeroVakiparta/pikatchuprice/commit/73d92f6e24131a3e219312214c4c58a72ed46106))
+
 ## [1.1.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.1.0...v1.1.1) (2025-04-19)
 
 
