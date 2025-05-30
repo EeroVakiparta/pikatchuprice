@@ -47,83 +47,289 @@
 
         /* Weather component styles */
         #weatherContainer {
-            background-color: #f0f8ff;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            max-width: 550px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
+            border: 1px solid #e0e0e0;
         }
 
         #weatherContainer h2 {
             margin-top: 0;
+            margin-bottom: 15px;
             color: #333;
-            display: flex;
-            align-items: center;
+            font-size: 1.4em;
+            font-weight: 600;
         }
 
         .weather-card {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
         }
 
         .current-temp {
-            font-size: 2.2em;
+            font-size: 2.5em;
             font-weight: bold;
-            margin-right: 15px;
+            margin-right: 20px;
+            color: #2c3e50;
         }
 
         .weather-details {
             flex-grow: 1;
         }
 
+        .weather-details div {
+            margin: 3px 0;
+            font-size: 0.95em;
+            color: #555;
+        }
+
         .weather-icon {
-            font-size: 2.5em;
-            margin-left: 15px;
-            width: 60px;
-            height: 60px;
+            font-size: 3em;
+            margin-left: 20px;
+            width: 70px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .forecast-items {
+        /* Hourly forecast styles */
+        .forecast-section {
+            margin: 20px 0;
+        }
+
+        .forecast-section h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        .hourly-header {
             display: flex;
-            overflow-x: auto;
-            margin-top: 15px;
-            padding-bottom: 10px;
-        }
-
-        .forecast-item {
-            min-width: 80px;
-            text-align: center;
-            padding: 8px;
-            border-right: 1px solid #eee;
-        }
-
-        .forecast-item:last-child {
-            border-right: none;
-        }
-
-        .forecast-time {
+            align-items: center;
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 8px;
             font-weight: bold;
+            font-size: 0.85em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .hourly-header .hourly-time {
+            min-width: 60px;
+        }
+
+        .hourly-header .hourly-icon {
+            margin: 0 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .hourly-header .hourly-temp {
+            min-width: 50px;
+        }
+
+        .hourly-header .hourly-feels {
+            min-width: 50px;
+        }
+
+        .hourly-header .hourly-wind-speed {
+            min-width: 60px;
+        }
+
+        .hourly-header .hourly-wind-dir {
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .hourly-header .hourly-humidity {
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .hourly-forecast {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hourly-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+
+        .hourly-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .hourly-time {
+            min-width: 60px;
+            font-weight: 600;
+            color: #333;
             font-size: 0.9em;
         }
 
-        .forecast-temp {
-            font-size: 1.1em;
-            margin: 5px 0;
+        .hourly-icon {
+            font-size: 1.5em;
+            margin: 0 15px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .forecast-desc {
-            font-size: 0.8em;
+        .hourly-temp {
+            min-width: 50px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1em;
+        }
+
+        .hourly-feels {
+            min-width: 50px;
             color: #666;
+            font-size: 0.9em;
+        }
+
+        .hourly-wind-speed {
+            min-width: 60px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .hourly-wind-dir {
+            min-width: 40px;
+            color: #666;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .hourly-humidity {
+            min-width: 60px;
+            text-align: right;
+            font-size: 0.8em;
+            color: #4a90e2;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 3px;
+        }
+
+        /* Daily forecast styles */
+        .daily-forecast {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .daily-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+
+        .daily-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .daily-day {
+            min-width: 50px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .daily-date {
+            min-width: 35px;
+            color: #666;
+            font-size: 0.85em;
+            margin-right: 15px;
+        }
+
+        .daily-icon {
+            font-size: 1.5em;
+            margin: 0 15px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .daily-temps {
+            flex-grow: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .daily-high {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-right: 5px;
+        }
+
+        .daily-low {
+            color: #7f8c8d;
+        }
+
+        .daily-precipitation {
+            min-width: 60px;
+            text-align: right;
+            font-size: 0.8em;
+            color: #4a90e2;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 3px;
         }
 
         #weatherError {
-            color: #d9534f;
+            color: #e74c3c;
             font-style: italic;
+            text-align: center;
+            padding: 20px;
+            background-color: #fdf2f2;
+            border-radius: 8px;
+            border: 1px solid #f8d7da;
+        }
+
+        @media (max-width: 768px) {
+            #weatherContainer {
+                margin: 15px 10px;
+                padding: 15px;
+            }
+            
+            .daily-item {
+                padding: 10px;
+            }
+            
+            .daily-day, .daily-date {
+                min-width: 30px;
+                font-size: 0.8em;
+            }
         }
 
         /* Location styles */
@@ -227,24 +433,31 @@
 
     <!-- Weather Section Start -->
     <div id="weatherContainer">
-        <h2 id="weatherLocationTitle">Today's Weather</h2>
+        <h2 id="weatherLocationTitle">Weather in Tampere</h2>
         <div id="weatherContent">
             <div id="weatherLoading">Loading weather data...</div>
             <div id="weatherError" style="display: none;"></div>
-            <div id="weatherCard" style="display: none;" class="weather-card">
-                <div class="current-temp" id="currentTemp"></div>
-                <div class="weather-details">
-                    <div id="weatherDescription"></div>
-                    <div id="tempHighLow"></div>
-                    <div id="precipitation"></div>
-                    <div id="wind"></div>
-                </div>
-                <div class="weather-icon" id="weatherIcon"></div>
-            </div>
         </div>
-        <div id="forecastContainer">
-            <h3>Today's Forecast</h3>
-            <div id="forecastItems" class="forecast-items"></div>
+        
+        <!-- Hourly Forecast Section -->
+        <div id="hourlyForecastSection" class="forecast-section" style="display: none;">
+            <h3>Today's Hourly Forecast</h3>
+            <div class="hourly-header">
+                <div class="hourly-time">TIME</div>
+                <div class="hourly-icon"></div>
+                <div class="hourly-temp">°C</div>
+                <div class="hourly-feels">feels like</div>
+                <div class="hourly-wind-speed">wind speed</div>
+                <div class="hourly-wind-dir">wind direction</div>
+                <div class="hourly-humidity">humidity</div>
+            </div>
+            <div id="hourlyForecast" class="hourly-forecast"></div>
+        </div>
+        
+        <!-- Daily Forecast Section -->
+        <div id="dailyForecastSection" class="forecast-section" style="display: none;">
+            <h3>7-Day Forecast</h3>
+            <div id="dailyForecast" class="daily-forecast"></div>
         </div>
     </div>
     <!-- Weather Section End -->
@@ -424,7 +637,6 @@
                                 display: true,
                                 text: 'Price c/kWh (€)',
                             },
-                            min: 6.0,
                         },
                     },
                     plugins: {
@@ -481,25 +693,29 @@
             
             // Update the location display
             document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)})`;
-            document.getElementById('weatherLocationTitle').textContent = `Today's Weather in ${locationName}`;
+            document.getElementById('weatherLocationTitle').textContent = `Weather in ${locationName}`;
             
             const weatherLoading = document.getElementById('weatherLoading');
             const weatherError = document.getElementById('weatherError');
-            const weatherCard = document.getElementById('weatherCard');
+            const hourlySection = document.getElementById('hourlyForecastSection');
+            const dailySection = document.getElementById('dailyForecastSection');
 
             try {
                 weatherLoading.style.display = 'block';
                 weatherError.style.display = 'none';
-                weatherCard.style.display = 'none';
+                hourlySection.style.display = 'none';
+                dailySection.style.display = 'none';
 
-                // Create URL for Open-Meteo API
+                // Create URL for Open-Meteo API with extended data
                 const apiUrl = new URL('https://api.open-meteo.com/v1/forecast');
                 apiUrl.searchParams.append('latitude', latitude);
                 apiUrl.searchParams.append('longitude', longitude);
                 apiUrl.searchParams.append('current', 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day');
-                apiUrl.searchParams.append('hourly', 'temperature_2m,precipitation_probability,weather_code');
-                apiUrl.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,sunrise,sunset');
+                apiUrl.searchParams.append('hourly', 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m');
+                apiUrl.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max');
                 apiUrl.searchParams.append('timezone', 'Europe/Helsinki');
+                apiUrl.searchParams.append('forecast_days', '7');
+                apiUrl.searchParams.append('windspeed_unit', 'ms');
                 
                 // Fetch data from API
                 const response = await fetch(apiUrl);
@@ -511,10 +727,12 @@
                 const data = await response.json();
                 
                 // Display the weather data
-                displayWeatherData(data);
+                displayHourlyForecast(data);
+                displayDailyForecast(data);
                 
                 weatherLoading.style.display = 'none';
-                weatherCard.style.display = 'flex';
+                hourlySection.style.display = 'block';
+                dailySection.style.display = 'block';
             } catch (error) {
                 console.error('Error fetching weather data:', error);
                 weatherLoading.style.display = 'none';
@@ -523,66 +741,105 @@
             }
         }
 
-        function displayWeatherData(data) {
-            // Display current weather
-            if (data.current) {
-                const currentElement = document.getElementById('currentTemp');
-                const descriptionElement = document.getElementById('weatherDescription');
-                const tempHighLowElement = document.getElementById('tempHighLow');
-                const precipitationElement = document.getElementById('precipitation');
-                const windElement = document.getElementById('wind');
-                const weatherIconElement = document.getElementById('weatherIcon');
-                
-                // Format current temperature
-                currentElement.textContent = `${Math.round(data.current.temperature_2m)}°C`;
-                
-                // Display weather description based on weather code
-                const weatherDescription = getWeatherDescription(data.current.weather_code);
-                descriptionElement.textContent = weatherDescription;
-                
-                // Display high/low temps
-                if (data.daily && data.daily.temperature_2m_max && data.daily.temperature_2m_min) {
-                    const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
-                    const minTemp = Math.round(data.daily.temperature_2m_min[0]);
-                    tempHighLowElement.textContent = `High: ${maxTemp}°C / Low: ${minTemp}°C`;
-                }
-                
-                // Display wind information
-                windElement.textContent = `Wind: ${Math.round(data.current.wind_speed_10m)} km/h`;
-                
-                // Display weather icon
-                weatherIconElement.innerHTML = getWeatherIcon(data.current.weather_code, data.current.is_day);
-            }
+        function displayHourlyForecast(data) {
+            const hourlyContainer = document.getElementById('hourlyForecast');
+            hourlyContainer.innerHTML = '';
             
-            // Display hourly forecast for today
             if (data.hourly) {
-                const forecastItems = document.getElementById('forecastItems');
-                forecastItems.innerHTML = '';
-                
                 const now = new Date();
-                const nowHour = now.getHours();
+                const currentHour = now.getHours();
                 
-                // Only display forecast for the rest of today, starting from next hour
-                const startIndex = nowHour + 1;
-                const endIndex = Math.min(nowHour + 13, 24);  // Show up to 12 hours ahead but not more than midnight
-                
-                for (let i = startIndex; i < endIndex; i++) {
-                    const time = new Date(data.hourly.time[i]);
-                    const temp = Math.round(data.hourly.temperature_2m[i]);
-                    const weatherCode = data.hourly.weather_code[i];
-                    const precipProb = data.hourly.precipitation_probability[i];
-                    const isDay = time.getHours() >= 6 && time.getHours() <= 18;  // Simple day/night check
+                // Show next 12 hours starting from current hour
+                for (let i = 0; i < 12; i++) {
+                    const hourIndex = currentHour + i;
+                    if (hourIndex >= data.hourly.time.length) break;
                     
-                    const forecastItem = document.createElement('div');
-                    forecastItem.className = 'forecast-item';
-                    forecastItem.innerHTML = `
-                        <div class="forecast-time">${time.getHours()}:00</div>
-                        <div class="forecast-icon">${getWeatherIcon(weatherCode, isDay, true)}</div>
-                        <div class="forecast-temp">${temp}°C</div>
-                        <div class="forecast-desc">${precipProb > 0 ? `${precipProb}% precip.` : 'No precip.'}</div>
+                    const time = new Date(data.hourly.time[hourIndex]);
+                    const temp = Math.round(data.hourly.temperature_2m[hourIndex]);
+                    const feelsLike = Math.round(data.hourly.apparent_temperature[hourIndex]);
+                    const weatherCode = data.hourly.weather_code[hourIndex];
+                    const windSpeed = Math.round(data.hourly.wind_speed_10m[hourIndex]);
+                    const windDirection = data.hourly.wind_direction_10m[hourIndex];
+                    const humidity = data.hourly.relative_humidity_2m[hourIndex];
+                    const isDay = time.getHours() >= 6 && time.getHours() <= 18;
+                    
+                    const hourlyItem = document.createElement('div');
+                    hourlyItem.className = 'hourly-item';
+                    
+                    const timeStr = i === 0 ? 'Now' : time.toLocaleTimeString('en', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                    });
+                    
+                    hourlyItem.innerHTML = `
+                        <div class="hourly-time">${timeStr}</div>
+                        <div class="hourly-icon">${getWeatherIcon(weatherCode, isDay, true)}</div>
+                        <div class="hourly-temp">+${temp}°</div>
+                        <div class="hourly-feels">+${feelsLike}°</div>
+                        <div class="hourly-wind-speed">${windSpeed}m/s</div>
+                        <div class="hourly-wind-dir">${getWindDirectionArrow(windDirection)}</div>
+                        <div class="hourly-humidity">
+                            <span>💧</span>
+                            <span>${humidity}%</span>
+                        </div>
                     `;
                     
-                    forecastItems.appendChild(forecastItem);
+                    hourlyContainer.appendChild(hourlyItem);
+                }
+            }
+        }
+
+        function getWindDirectionArrow(degrees) {
+            // Convert wind direction to arrow pointing where wind is going
+            if (degrees >= 337.5 || degrees < 22.5) return '⬆️'; // North
+            else if (degrees >= 22.5 && degrees < 67.5) return '↗️'; // NE
+            else if (degrees >= 67.5 && degrees < 112.5) return '➡️'; // East
+            else if (degrees >= 112.5 && degrees < 157.5) return '↘️'; // SE
+            else if (degrees >= 157.5 && degrees < 202.5) return '⬇️'; // South
+            else if (degrees >= 202.5 && degrees < 247.5) return '↙️'; // SW
+            else if (degrees >= 247.5 && degrees < 292.5) return '⬅️'; // West
+            else if (degrees >= 292.5 && degrees < 337.5) return '↖️'; // NW
+            else return '❓';
+        }
+
+        function displayDailyForecast(data) {
+            const dailyContainer = document.getElementById('dailyForecast');
+            dailyContainer.innerHTML = '';
+            
+            if (data.daily) {
+                const today = new Date();
+                const dayNames = ['SU', 'MA', 'TI', 'KE', 'TO', 'PE', 'LA'];
+                
+                // Show 7 days starting from today
+                for (let i = 0; i < Math.min(7, data.daily.time.length); i++) {
+                    const date = new Date(data.daily.time[i]);
+                    const maxTemp = Math.round(data.daily.temperature_2m_max[i]);
+                    const minTemp = Math.round(data.daily.temperature_2m_min[i]);
+                    const weatherCode = data.daily.weather_code[i];
+                    const precipProb = data.daily.precipitation_probability_max[i] || 0;
+                    
+                    const dayAbbr = i === 0 ? 'Today' : dayNames[date.getDay()];
+                    const dateNum = date.getDate();
+                    const monthNum = date.getMonth() + 1;
+                    
+                    const dailyItem = document.createElement('div');
+                    dailyItem.className = 'daily-item';
+                    dailyItem.innerHTML = `
+                        <div class="daily-day">${dayAbbr}</div>
+                        <div class="daily-date">${dateNum}.${monthNum}.</div>
+                        <div class="daily-icon">${getWeatherIcon(weatherCode, true, true)}</div>
+                        <div class="daily-temps">
+                            <span class="daily-high">+${maxTemp}°</span>
+                            <span class="daily-low">+${minTemp}°</span>
+                        </div>
+                        <div class="daily-precipitation">
+                            <span>💧</span>
+                            <span>${precipProb}%</span>
+                        </div>
+                    `;
+                    
+                    dailyContainer.appendChild(dailyItem);
                 }
             }
         }
