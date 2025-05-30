@@ -1,3 +1,17 @@
+# [1.5.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.4.1...v1.5.0) (2025-05-30)
+
+
+### Bug Fixes
+
+* replace axios with native https in fuel prices lambda and add tests ([918576f](https://github.com/EeroVakiparta/pikatchuprice/commit/918576f4cfcfd90de339236bccf9939911190c11))
+* **test:** replace corrupted fuel prices test with proper mocked implementation ([41e9647](https://github.com/EeroVakiparta/pikatchuprice/commit/41e9647def34f2c2501f8102d8342b8b4ec17c44))
+
+
+### Features
+
+* limit fuel stations to top 5 and move below electricity prices ([c3f6460](https://github.com/EeroVakiparta/pikatchuprice/commit/c3f64601847f92ea8f21736d3b8de3564531944a))
+* **ui:** improve chart readability with better y-axis labeling and minimum scale ([8d84d01](https://github.com/EeroVakiparta/pikatchuprice/commit/8d84d0114cd8c69c75c2809386067f8580b2747d))
+
 ## [1.4.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.4.0...v1.4.1) (2025-04-21)
 
 
