@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.5.0...v1.6.0) (2025-05-30)
+
+
+### Bug Fixes
+
+* **deps:** update package-lock.json to sync with package.json dependencies ([7784743](https://github.com/EeroVakiparta/pikatchuprice/commit/77847435c69ee78316768824b0e29266c3de5cd9))
+* **ui:** remove y-axis minimum constraint for proper dynamic scaling ([2e0c343](https://github.com/EeroVakiparta/pikatchuprice/commit/2e0c343862bb7bbe85c93d47820fea8a06be932f))
+
+
+### Features
+
+* **weather:** enhance hourly forecast with detailed columns and remove current weather card ([e43491a](https://github.com/EeroVakiparta/pikatchuprice/commit/e43491a884b640ea98aaa133ffb8cdf3c1921ca4))
+
 # [1.5.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.4.1...v1.5.0) (2025-05-30)
 
 
