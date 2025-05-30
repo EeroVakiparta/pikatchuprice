@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.6.0...v1.6.1) (2025-05-30)
+
+
+### Bug Fixes
+
+* **ci:** remove CloudFront invalidation from deployment workflow ([bd6206d](https://github.com/EeroVakiparta/pikatchuprice/commit/bd6206da4e5ffb99e23f851aff483671873eb0d9))
+
 # [1.6.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.5.0...v1.6.0) (2025-05-30)
 
 
