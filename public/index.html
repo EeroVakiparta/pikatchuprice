@@ -1,1019 +1,348 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon.png" type="image/png">
-    <title>Pikatchu Prices (aka. PP)</title>
-    <style>
-        #refreshButton {
-            font-size: 20px;
-            padding: 10px 20px;
-            margin: 10px;
-            cursor: pointer;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffd43b">
+<title>PikatchuPrice</title>
+<meta name="description" content="Electricity spot price now, today and tomorrow">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  :root {
+    --bg: #f6f4ee; --card: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e6e2d8;
+    --accent: #ffd43b; --cheap: #2e9e5b; --mid: #e0a100; --high: #d64545;
+    --cheap-bg: #e4f5ea; --mid-bg: #fdf3d3; --high-bg: #fbe3e3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141416; --card: #1f1f23; --ink: #f2f2f4; --muted: #9a9aa2; --line: #2e2e34;
+      --cheap: #4cc27d; --mid: #f0b92a; --high: #ef6a6a;
+      --cheap-bg: #173323; --mid-bg: #3a2f10; --high-bg: #3d1b1b;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 480px; margin: 0 auto; padding: 12px 16px 32px; }
+  header { display: flex; align-items: center; gap: 10px; padding: 4px 0 12px; }
+  header img { width: 36px; height: 36px; border-radius: 9px; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 700; flex: 1; }
+  header .wx { font-size: 14px; color: var(--muted); white-space: nowrap; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
 
-        @media (max-width: 768px) {
-            #refreshButton {
-                font-size: 16px;
-                padding: 8px 16px;
-                margin: 8px;
-            }
+  /* now */
+  .now { text-align: center; padding: 22px 16px 18px; }
+  .now .label { font-size: 13px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+  .now .price { font-size: 68px; font-weight: 800; line-height: 1.05; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+  .now .unit { font-size: 15px; color: var(--muted); }
+  .pill { display: inline-block; margin-top: 12px; padding: 5px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; }
+  .lv-cheap .pill { background: var(--cheap-bg); color: var(--cheap); }
+  .lv-mid .pill { background: var(--mid-bg); color: var(--mid); }
+  .lv-high .pill { background: var(--high-bg); color: var(--high); }
+  .lv-cheap .price { color: var(--cheap); } .lv-mid .price { color: var(--mid); } .lv-high .price { color: var(--high); }
+  .now .next { margin-top: 12px; font-size: 14px; color: var(--muted); }
 
-            img {
-                width: 250px;
-            }
-        }
+  /* chart */
+  .tabs { display: flex; gap: 6px; background: var(--bg); border-radius: 12px; padding: 4px; margin-bottom: 12px; }
+  .tabs button {
+    flex: 1; border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 650; font-size: 14px;
+    padding: 8px 0; border-radius: 9px; cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .tabs button:disabled { opacity: .45; cursor: default; }
+  .readout { display: flex; justify-content: space-between; align-items: baseline; min-height: 26px; margin-bottom: 6px; }
+  .readout .t { font-size: 14px; color: var(--muted); }
+  .readout .p { font-size: 18px; font-weight: 750; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 170px; touch-action: pan-y; }
+  .bar { flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: pointer; position: relative; }
+  .bar .tag { position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 750; white-space: nowrap; font-variant-numeric: tabular-nums; pointer-events: none; }
+  .bar.cheap .tag { color: var(--cheap); } .bar.mid .tag { color: var(--mid); } .bar.high .tag { color: var(--high); }
+  .bar.marked.past i { opacity: .6; }
+  .bar i { display: block; width: 100%; border-radius: 4px 4px 1px 1px; min-height: 3px; }
+  .bar.cheap i { background: var(--cheap); } .bar.mid i { background: var(--mid); } .bar.high i { background: var(--high); }
+  .bar.past i { opacity: .35; }
+  .bar.cur i { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .bar.sel i { filter: brightness(1.15); outline: 2px solid var(--ink); outline-offset: 1px; }
+  .axis { display: flex; gap: 3px; margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .axis span { flex: 1; text-align: center; overflow: visible; white-space: nowrap; }
+  .stats { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .stats b { display: block; color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+  .empty { height: 170px; display: grid; place-items: center; color: var(--muted); font-size: 14px; text-align: center; }
 
-        .info-link {
-            color: #666;
-            font-size: 14px;
-            text-decoration: none;
-            margin-top: 10px;
-            display: inline-block;
-            transition: color 0.3s ease;
-        }
-        
-        .info-link:hover {
-            text-decoration: underline;
-            color: #4682b4;
-        }
+  /* weather */
+  h2 { font-size: 15px; margin: 0 0 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+  h2 small { font-weight: 500; font-size: 12px; color: var(--muted); }
+  .wxstrip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+  .wxstrip::-webkit-scrollbar { display: none; }
+  .wxh { flex: 0 0 54px; text-align: center; background: var(--bg); border-radius: 12px; padding: 8px 0; font-variant-numeric: tabular-nums; }
+  .wxh .h { font-size: 12px; color: var(--muted); }
+  .wxh .i { font-size: 22px; line-height: 1.3; }
+  .wxh .t { font-size: 15px; font-weight: 700; }
+  .wxh .w { font-size: 11px; color: var(--muted); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); text-align: center; font-variant-numeric: tabular-nums; }
+  .days .d { font-size: 12px; color: var(--muted); }
+  .days .i { font-size: 20px; line-height: 1.4; }
+  .days .hi { font-size: 14px; font-weight: 700; }
+  .days .lo { font-size: 12px; color: var(--muted); }
 
-        .info-link i {
-            margin-right: 4px;
-            font-size: 16px;
-        }
+  /* fuel */
+  .sample { background: var(--mid-bg); color: var(--mid); border-radius: 10px; padding: 7px 10px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .st { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .st:first-of-type { border-top: 0; }
+  .st .n { flex: 1; min-width: 0; }
+  .st .n b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st .n span { font-size: 12px; color: var(--muted); }
+  .st .p { font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; text-align: right; }
+  .st .p small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }
+  .st.best .p { color: var(--cheap); }
 
-        /* Weather component styles */
-        #weatherContainer {
-            background-color: #ffffff;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            max-width: 600px;
-            border: 1px solid #e0e0e0;
-        }
-
-        #weatherContainer h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 1.4em;
-            font-weight: 600;
-        }
-
-        .weather-card {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .current-temp {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-right: 20px;
-            color: #2c3e50;
-        }
-
-        .weather-details {
-            flex-grow: 1;
-        }
-
-        .weather-details div {
-            margin: 3px 0;
-            font-size: 0.95em;
-            color: #555;
-        }
-
-        .weather-icon {
-            font-size: 3em;
-            margin-left: 20px;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Hourly forecast styles */
-        .forecast-section {
-            margin: 20px 0;
-        }
-
-        .forecast-section h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 1.1em;
-            font-weight: 600;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 8px;
-        }
-
-        .hourly-header {
-            display: flex;
-            align-items: center;
-            padding: 8px 15px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 0.85em;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        .hourly-header .hourly-time {
-            min-width: 60px;
-        }
-
-        .hourly-header .hourly-icon {
-            margin: 0 15px;
-            width: 30px;
-            text-align: center;
-        }
-
-        .hourly-header .hourly-temp {
-            min-width: 50px;
-        }
-
-        .hourly-header .hourly-feels {
-            min-width: 50px;
-        }
-
-        .hourly-header .hourly-wind-speed {
-            min-width: 60px;
-        }
-
-        .hourly-header .hourly-wind-dir {
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .hourly-header .hourly-humidity {
-            min-width: 60px;
-            text-align: right;
-        }
-
-        .hourly-forecast {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .hourly-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            transition: background-color 0.2s;
-        }
-
-        .hourly-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .hourly-time {
-            min-width: 60px;
-            font-weight: 600;
-            color: #333;
-            font-size: 0.9em;
-        }
-
-        .hourly-icon {
-            font-size: 1.5em;
-            margin: 0 15px;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hourly-temp {
-            min-width: 50px;
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 1em;
-        }
-
-        .hourly-feels {
-            min-width: 50px;
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .hourly-wind-speed {
-            min-width: 60px;
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .hourly-wind-dir {
-            min-width: 40px;
-            color: #666;
-            font-size: 1.2em;
-            text-align: center;
-        }
-
-        .hourly-humidity {
-            min-width: 60px;
-            text-align: right;
-            font-size: 0.8em;
-            color: #4a90e2;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 3px;
-        }
-
-        /* Daily forecast styles */
-        .daily-forecast {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .daily-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            transition: background-color 0.2s;
-        }
-
-        .daily-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .daily-day {
-            min-width: 50px;
-            font-weight: 600;
-            color: #333;
-            font-size: 0.9em;
-        }
-
-        .daily-date {
-            min-width: 35px;
-            color: #666;
-            font-size: 0.85em;
-            margin-right: 15px;
-        }
-
-        .daily-icon {
-            font-size: 1.5em;
-            margin: 0 15px;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .daily-temps {
-            flex-grow: 1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .daily-high {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-right: 5px;
-        }
-
-        .daily-low {
-            color: #7f8c8d;
-        }
-
-        .daily-precipitation {
-            min-width: 60px;
-            text-align: right;
-            font-size: 0.8em;
-            color: #4a90e2;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 3px;
-        }
-
-        #weatherError {
-            color: #e74c3c;
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-            background-color: #fdf2f2;
-            border-radius: 8px;
-            border: 1px solid #f8d7da;
-        }
-
-        @media (max-width: 768px) {
-            #weatherContainer {
-                margin: 15px 10px;
-                padding: 15px;
-            }
-            
-            .daily-item {
-                padding: 10px;
-            }
-            
-            .daily-day, .daily-date {
-                min-width: 30px;
-                font-size: 0.8em;
-            }
-        }
-
-        /* Location styles */
-        #locationContainer {
-            background-color: #f5f5f5;
-            border-radius: 10px;
-            padding: 12px;
-            margin: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            max-width: 550px;
-        }
-
-        #locationInfo {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        #locationInfo p {
-            margin: 5px 0;
-            flex-grow: 1;
-        }
-
-        #userLocation {
-            font-weight: bold;
-            color: #4682b4;
-        }
-
-        #updateLocationButton {
-            background-color: #4682b4;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-
-        #updateLocationButton:hover {
-            background-color: #36648b;
-        }
-
-        /* Version notification styles */
-        #versionContainer {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-        }
-
-        #versionInfo {
-            margin: 0;
-            color: #666;
-            font-size: 14px;
-        }
-
-        #updateNotification {
-            display: none;
-            margin-left: 10px;
-            padding: 3px 8px;
-            background-color: #e6f3ff;
-            color: #4682b4;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            animation: pulse 2s infinite;
-            border: 1px solid #add8e6;
-            transition: all 0.3s ease;
-        }
-
-        #updateNotification:hover {
-            background-color: #4682b4;
-            color: white;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script src="fuel-prices.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; }
+  footer button { border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 999px; cursor: pointer; margin-bottom: 8px; }
+  footer a { color: inherit; }
+  .err { color: var(--high); text-align: center; padding: 30px 0; }
+</style>
 </head>
-
 <body>
-    <img src="https://www.freeiconspng.com/uploads/pikachu-transparent-29.gif" width="350" alt="Pikachu" />
+<main>
+  <header>
+    <img src="icon.png" alt="">
+    <h1>PikatchuPrice</h1>
+    <span class="wx" id="wx"></span>
+  </header>
 
-    <h1>Electricity Prices</h1>
+  <section class="card now" id="now">
+    <div class="label">Electricity now</div>
+    <div class="price" id="nowPrice">–</div>
+    <div class="unit">c/kWh</div>
+    <div><span class="pill" id="nowPill">Loading…</span></div>
+    <div class="next" id="nowNext"></div>
+  </section>
 
-    <!-- User Location Section -->
-    <div id="locationContainer">
-        <div id="locationInfo">
-            <p>Your location: <span id="userLocation">Not detected</span></p>
-            <button id="updateLocationButton">Update Location</button>
-        </div>
+  <section class="card">
+    <div class="tabs" role="tablist">
+      <button id="tabToday" role="tab" aria-selected="true">Today</button>
+      <button id="tabTomorrow" role="tab" aria-selected="false">Tomorrow</button>
     </div>
+    <div class="readout"><span class="t" id="roTime"></span><span class="p" id="roPrice"></span></div>
+    <div id="chart"></div>
+    <div class="stats" id="stats"></div>
+  </section>
 
-    <!-- Weather Section Start -->
-    <div id="weatherContainer">
-        <h2 id="weatherLocationTitle">Weather in Tampere</h2>
-        <div id="weatherContent">
-            <div id="weatherLoading">Loading weather data...</div>
-            <div id="weatherError" style="display: none;"></div>
-        </div>
-        
-        <!-- Hourly Forecast Section -->
-        <div id="hourlyForecastSection" class="forecast-section" style="display: none;">
-            <h3>Today's Hourly Forecast</h3>
-            <div class="hourly-header">
-                <div class="hourly-time">TIME</div>
-                <div class="hourly-icon"></div>
-                <div class="hourly-temp">°C</div>
-                <div class="hourly-feels">feels like</div>
-                <div class="hourly-wind-speed">wind speed</div>
-                <div class="hourly-wind-dir">wind direction</div>
-                <div class="hourly-humidity">humidity</div>
-            </div>
-            <div id="hourlyForecast" class="hourly-forecast"></div>
-        </div>
-        
-        <!-- Daily Forecast Section -->
-        <div id="dailyForecastSection" class="forecast-section" style="display: none;">
-            <h3>7-Day Forecast</h3>
-            <div id="dailyForecast" class="daily-forecast"></div>
-        </div>
+  <section class="card" id="wxCard" hidden>
+    <h2>Weather <small>Tampere</small></h2>
+    <div class="wxstrip" id="wxHours"></div>
+    <div class="days" id="wxDays"></div>
+  </section>
+
+  <section class="card">
+    <h2>Fuel nearby <small id="fuelNote"></small></h2>
+    <div class="sample" id="fuelSample" hidden>Fuel prices are not available right now.</div>
+    <div class="tabs" role="tablist" id="fuelTabs">
+      <button data-f="95E10" aria-selected="false">95</button>
+      <button data-f="98E5" aria-selected="true">98</button>
+      <button data-f="Diesel" aria-selected="false">Diesel</button>
     </div>
-    <!-- Weather Section End -->
+    <div id="fuelList"></div>
+  </section>
 
-    <div id="infoMessage"></div>
-    
-    <button id="refreshButton">Refresh Data</button>
-    <p id="lastRefreshTime">Last Refresh: N/A</p>
+  <footer>
+    <button id="refresh">Refresh</button>
+    <div id="updated"></div>
+    <div><span id="ver"></span><a href="https://github.com/EeroVakiparta/pikatchuprice">GitHub</a></div>
+  </footer>
+</main>
 
-    <div id="chartContainer">
-        <canvas id="priceChart"></canvas>
-        <div id="versionContainer">
-            <p id="versionInfo">v0.1</p>
-            <span id="updateNotification">
-                New version available! Click to update
-            </span>
-        </div>
-        <a href="https://github.com/EeroVakiparta/pikatchuprice" class="info-link"><i class="fab fa-github"></i> View on GitHub</a>
-    </div>
+<script>
+const API = 'https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/';
+const CHEAP_MAX = 5, MID_MAX = 12;           // c/kWh thresholds for green / yellow / red
+const HOUR = 3600e3;
+const $ = id => document.getElementById(id);
+const level = p => p <= CHEAP_MAX ? 'cheap' : p <= MID_MAX ? 'mid' : 'high';
+const LEVEL_TEXT = { cheap: 'Cheap', mid: 'Normal', high: 'Expensive' };
+const fmt = p => p.toFixed(p < 10 ? 2 : 1).replace('.', ',');
+const hh = ts => String(new Date(ts).getHours()).padStart(2, '0');
+const dayKey = ts => { const d = new Date(ts); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
 
-    <script>
-        let lastRefresh = 'N/A';
-        let chart = null;
+let hours = [], view = 'today', selected = null;
 
-        // Fetch version information
-        async function fetchVersionInfo() {
-            try {
-                const response = await fetch('./version.json');
-                if (response.ok) {
-                    const versionData = await response.json();
-                    const versionElement = document.getElementById('versionInfo');
-                    versionElement.textContent = `v${versionData.version}`;
-                    
-                    // Check if this is a new version
-                    checkForNewVersion(versionData.version);
-                }
-            } catch (error) {
-                console.error('Error fetching version info:', error);
-            }
-        }
+async function load() {
+  try {
+    const res = await fetch(API, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+    hours = raw.map(r => ({ t: r.timestamp, p: r.price })).sort((a, b) => a.t - b.t);
+    render();
+    $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString('fi-FI', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    $('nowPill').textContent = 'Could not load prices';
+    $('chart').innerHTML = '<div class="err">Price service did not answer. Try Refresh.</div>';
+  }
+}
 
-        // Check if there's a new version available
-        function checkForNewVersion(currentVersion) {
-            const storedVersion = localStorage.getItem('appVersion');
-            const updateNotification = document.getElementById('updateNotification');
-            
-            if (!storedVersion) {
-                // First time visit, just store the version
-                localStorage.setItem('appVersion', currentVersion);
-            } else if (storedVersion !== currentVersion) {
-                // New version detected
-                updateNotification.style.display = 'inline';
-                
-                // Add click event to update notification
-                updateNotification.addEventListener('click', () => {
-                    // Update the stored version
-                    localStorage.setItem('appVersion', currentVersion);
-                    
-                    // Reload the page to apply the new version
-                    window.location.reload(true);
-                });
-            }
-        }
+function render() {
+  const now = Date.now();
+  const cur = hours.find(h => h.t <= now && now < h.t + HOUR);
 
-        // Fetch data on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchData();
-            fetchVersionInfo();
-            checkUserLocation();
-            fetchWeatherData();
-            
-            // Initialize fuel price component
-            const fuelPriceComponent = new FuelPriceComponent();
-            fuelPriceComponent.init();
-            
-            // Set up event listener for location update button
-            document.getElementById('updateLocationButton').addEventListener('click', function() {
-                getUserLocation();
-            });
-        });
+  // --- now card
+  const card = $('now');
+  card.className = 'card now';
+  if (cur) {
+    const lv = level(cur.p);
+    card.classList.add('lv-' + lv);
+    $('nowPrice').textContent = fmt(cur.p);
+    $('nowPill').textContent = LEVEL_TEXT[lv];
+    const nxt = hours.find(h => h.t === cur.t + HOUR);
+    if (nxt) {
+      const d = nxt.p - cur.p;
+      const arrow = Math.abs(d) < 0.3 ? '→ stays about the same' : d > 0 ? '↑ rises to ' + fmt(nxt.p) : '↓ falls to ' + fmt(nxt.p);
+      $('nowNext').textContent = arrow + ' at ' + hh(nxt.t) + ':00';
+    } else $('nowNext').textContent = '';
+  } else {
+    $('nowPrice').textContent = '–';
+    $('nowPill').textContent = 'No price for this hour';
+    $('nowNext').textContent = '';
+  }
 
-        async function fetchData() {
-            if (chart !== null) {
-                chart.destroy();
-            }
+  // --- tabs
+  const tomorrowKey = dayKey(now + 24 * HOUR);
+  const hasTomorrow = hours.filter(h => dayKey(h.t) === tomorrowKey).length >= 12;
+  $('tabTomorrow').disabled = !hasTomorrow;
+  $('tabTomorrow').textContent = hasTomorrow ? 'Tomorrow' : 'Tomorrow · ~14:00';
+  if (!hasTomorrow && view === 'tomorrow') view = 'today';
+  $('tabToday').setAttribute('aria-selected', view === 'today');
+  $('tabTomorrow').setAttribute('aria-selected', view === 'tomorrow');
 
-            const response = await fetchElectricityPricesFromDB();
-            if (response === null) return;  // Exit if there was an error fetching data
+  renderChart(view === 'today' ? dayKey(now) : tomorrowKey, cur);
+}
 
-            const responseData = await response.json();
-            
-            // Handle response format based on data structure
-            let pricesData;
-            let priceTime;
-            let prices;
-            
-            if (Array.isArray(responseData)) {
-                // Standard array format from our API
-                pricesData = responseData;
-                priceTime = pricesData.map(entry => new Date(entry.priceTime));
-                prices = pricesData.map(entry => entry.price);
-            } else if (responseData.prices && Array.isArray(responseData.prices)) {
-                // Format with nested prices array (direct from external API)
-                pricesData = responseData.prices;
-                priceTime = pricesData.map(entry => new Date(entry.startDate));
-                prices = pricesData.map(entry => entry.price);
-            } else {
-                console.error('Unexpected API response format:', responseData);
-                return; // Exit if the format is not recognized
-            }
+function renderChart(key, cur) {
+  const day = hours.filter(h => dayKey(h.t) === key);
+  const chart = $('chart');
+  if (!day.length) { chart.innerHTML = '<div class="empty">No prices for this day yet.</div>'; $('stats').innerHTML = ''; return; }
+  const now = Date.now();
+  const max = Math.max(10, ...day.map(h => h.p)) / 0.86;          // headroom for the labels
+  const lo = day.reduce((m, h) => h.p < m.p ? h : m), hi = day.reduce((m, h) => h.p > m.p ? h : m);
+  const bars = day.map(h => {
+    const cls = ['bar', level(h.p)];
+    if (h.t + HOUR <= now) cls.push('past');
+    if (cur && h.t === cur.t) cls.push('cur');
+    if (selected === h.t) cls.push('sel');
+    const pct = Math.max(0, h.p) / max * 100;
+    const tag = h === lo || h === hi ? `<b class="tag" style="bottom:calc(${pct}% + 5px)">${h.p.toFixed(1).replace('.', ',')}</b>` : '';
+    if (tag) cls.push('marked');
+    return `<div class="${cls.join(' ')}" data-t="${h.t}">${tag}<i style="height:${pct}%"></i></div>`;
+  }).join('');
+  const axis = day.map(h => `<span>${new Date(h.t).getHours() % 3 === 0 ? hh(h.t) : ''}</span>`).join('');
+  chart.innerHTML = `<div class="bars">${bars}</div><div class="axis">${axis}</div>`;
 
-            renderChart(priceTime, prices);
-            updateLastRefreshTime();
-        }
+  const sel = day.find(h => h.t === selected) || (cur && day.find(h => h.t === cur.t)) || null;
+  if (sel) {
+    $('roTime').textContent = hh(sel.t) + ':00–' + hh(sel.t + HOUR) + ':00' + (cur && sel.t === cur.t ? ' · now' : '');
+    $('roPrice').textContent = fmt(sel.p) + ' c/kWh';
+  } else { $('roTime').textContent = 'Tap a bar for the hour'; $('roPrice').textContent = ''; }
 
-        async function fetchElectricityPricesFromDB() {
-            try {
-                const response = await fetch('https://r8carkxrn0.execute-api.eu-north-1.amazonaws.com/prod/');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response;
-            } catch (error) {
-                console.error('There has been a problem with your fetch operation:', error);
-                return null;
-            }
-        }
+  const ps = day.map(h => h.p);
+  const avg = ps.reduce((a, b) => a + b, 0) / ps.length;
+  $('stats').innerHTML =
+    `<div>Lowest<b>${fmt(lo.p)}</b>at ${hh(lo.t)}</div>` +
+    `<div style="text-align:center">Average<b>${fmt(avg)}</b>c/kWh</div>` +
+    `<div style="text-align:right">Highest<b>${fmt(hi.p)}</b>at ${hh(hi.t)}</div>`;
+}
 
-        function renderChart(priceTime, prices) {
-            const currentTime = new Date();
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: priceTime,
-                    datasets: [{
-                        label: 'Electricity Prices',
-                        data: prices,
-                        backgroundColor: priceTime.map((dt) => {
-                            // Check if the priceTime matches the current time
-                            if (dt.getHours() === currentTime.getHours() && dt.getDate() === currentTime.getDate()) {
-                                // If it's the current time, set a different color
-                                return 'rgba(0, 0, 0, 0.6)'; // Black color
-                            } else if (prices[priceTime.indexOf(dt)] < 6) {
-                                return 'rgba(75, 192, 192, 0.6)'; // Green color
-                            } else if (prices[priceTime.indexOf(dt)] < 15) {
-                                return 'rgba(255, 255, 0, 0.6)'; // Yellow color
-                            } else if (prices[priceTime.indexOf(dt)] < 24) {
-                                return 'rgba(255, 165, 0, 0.6)'; // Orange color
-                            } else if (prices[priceTime.indexOf(dt)] >= 24) {
-                                return 'rgba(255, 0, 255, 0.6)'; // Purple color
-                            } else {
-                                return 'rgba(75, 192, 192, 0.2)'; // Default color
-                            }
-                        }),
-                        borderWidth: 1,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'hour',
-                                displayFormats: {
-                                    hour: 'HH:mm',
-                                },
-                            },
-                            title: {
-                                display: true,
-                                text: 'Date and Time',
-                            },
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Price c/kWh (€)',
-                            },
-                        },
-                    },
-                    plugins: {
-                        legend: {
-                            display: false,
-                        },
-                    },
-                },
-            });
+function pick(e) {
+  const bar = e.target.closest('.bar');
+  if (!bar) return;
+  selected = Number(bar.dataset.t);
+  render();
+}
+$('chart').addEventListener('click', pick);
+$('chart').addEventListener('pointermove', e => { if (e.pointerType !== 'mouse' || e.buttons) pick(e); });
+$('tabToday').onclick = () => { view = 'today'; selected = null; render(); };
+$('tabTomorrow').onclick = () => { view = 'tomorrow'; selected = null; render(); };
+$('refresh').onclick = load;
 
-            // Add vertical lines to separate days
-            const xAxis = chart.scales.x; // Get the x-axis scale
+const wxIcon = code => code === 0 ? '☀️' : code <= 3 ? '⛅' : code <= 48 ? '🌫️' : code <= 67 ? '🌧️' : code <= 77 ? '❄️' : code <= 82 ? '🌦️' : code <= 86 ? '🌨️' : '⛈️';
+const deg = t => { t = Math.round(t); return (t > 0 ? '+' : '') + t + '°'; };
 
-            // Calculate the positions of vertical lines based on date changes
-            let prevDate = null;
-            priceTime.forEach((date, index) => {
-                if (prevDate !== null && date.getDate() !== prevDate.getDate()) {
-                    const lineX = xAxis.getPixelForValue(date);
-                    ctx.save();
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(lineX, 0);
-                    ctx.lineTo(lineX, chart.height);
-                    ctx.stroke();
-                    ctx.restore();
-                }
-                prevDate = date;
-            });
+async function weather() {
+  try {
+    const u = 'https://api.open-meteo.com/v1/forecast?latitude=61.5&longitude=23.79&timezone=Europe%2FHelsinki&wind_speed_unit=ms&forecast_days=7'
+      + '&current=temperature_2m,weather_code'
+      + '&hourly=temperature_2m,weather_code,wind_speed_10m'
+      + '&daily=weather_code,temperature_2m_max,temperature_2m_min';
+    const w = await (await fetch(u)).json();
+    $('wx').textContent = `${wxIcon(w.current.weather_code)} ${deg(w.current.temperature_2m)} Tampere`;
 
-        }
-        function updateLastRefreshTime() {
-            const now = new Date();
-            lastRefresh = now.toLocaleTimeString();
-            document.getElementById('lastRefreshTime').textContent = `Last Refresh: ${lastRefresh}`;
-        }
+    const H = w.hourly, start = Math.max(0, H.time.findIndex(t => new Date(t).getTime() + HOUR > Date.now()));
+    $('wxHours').innerHTML = H.time.slice(start, start + 12).map((t, k) => {
+      const i = start + k;
+      return `<div class="wxh"><div class="h">${k === 0 ? 'Now' : t.slice(11, 13)}</div><div class="i">${wxIcon(H.weather_code[i])}</div>`
+        + `<div class="t">${deg(H.temperature_2m[i])}</div><div class="w">${Math.round(H.wind_speed_10m[i])} m/s</div></div>`;
+    }).join('');
 
-        window.addEventListener('focus', function () {
-            fetchData();
-        });
+    const D = w.daily;
+    $('wxDays').innerHTML = D.time.map((t, i) =>
+      `<div><div class="d">${i === 0 ? 'Today' : new Date(t + 'T12:00').toLocaleDateString('en-GB', { weekday: 'short' })}</div>`
+      + `<div class="i">${wxIcon(D.weather_code[i])}</div><div class="hi">${deg(D.temperature_2m_max[i])}</div><div class="lo">${deg(D.temperature_2m_min[i])}</div></div>`).join('');
+    $('wxCard').hidden = false;
+  } catch (e) { /* weather is optional */ }
+}
 
-        const refreshButton = document.getElementById('refreshButton');
-        refreshButton.addEventListener('click', function () {
-            fetchData();
-            fetchWeatherData();
-        });
+// ---- fuel: same response shape as the repo's fetchFuelPrices Lambda ({ stations: [...] })
+const FUEL_API = 'https://6dg6a1i64i.execute-api.eu-north-1.amazonaws.com/prod/';
+let stations = [], fuelType = '98E5';
 
-        // Weather Component Functions
-        async function fetchWeatherData() {
-            // Get location from localStorage or use default Tampere coordinates
-            let latitude = localStorage.getItem('userLat') || 61.4937;
-            let longitude = localStorage.getItem('userLon') || 23.8283;
-            let locationName = localStorage.getItem('userLocationName') || 'Tampere, Kissanmaa';
-            
-            // Update the location display
-            document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(latitude).toFixed(5)}, ${parseFloat(longitude).toFixed(5)})`;
-            document.getElementById('weatherLocationTitle').textContent = `Weather in ${locationName}`;
-            
-            const weatherLoading = document.getElementById('weatherLoading');
-            const weatherError = document.getElementById('weatherError');
-            const hourlySection = document.getElementById('hourlyForecastSection');
-            const dailySection = document.getElementById('dailyForecastSection');
+function ago(iso) {
+  if (!iso) return '';
+  const h = (Date.now() - new Date(iso).getTime()) / HOUR;
+  return h < 1 ? 'just now' : h < 24 ? Math.round(h) + ' h ago' : Math.round(h / 24) + ' d ago';
+}
 
-            try {
-                weatherLoading.style.display = 'block';
-                weatherError.style.display = 'none';
-                hourlySection.style.display = 'none';
-                dailySection.style.display = 'none';
+function renderFuel() {
+  const rows = stations.filter(s => s.prices && s.prices[fuelType]).sort((a, b) => a.prices[fuelType].price - b.prices[fuelType].price).slice(0, 5);
+  $('fuelList').innerHTML = rows.length ? rows.map((s, i) => {
+    const pr = s.prices[fuelType], km = s.distance >= 1000 ? (s.distance / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(s.distance) + ' m';
+    return `<div class="st${i === 0 ? ' best' : ''}"><div class="n"><b>${s.brand} ${s.name}</b><span>${km}</span></div>`
+      + `<div class="p">${pr.price.toFixed(3).replace('.', ',')} €<small>${ago(pr.updated)}</small></div></div>`;
+  }).join('') : '<div class="empty" style="height:80px">No stations with this fuel nearby.</div>';
+  for (const b of $('fuelTabs').children) b.setAttribute('aria-selected', b.dataset.f === fuelType);
+}
 
-                // Create URL for Open-Meteo API with extended data
-                const apiUrl = new URL('https://api.open-meteo.com/v1/forecast');
-                apiUrl.searchParams.append('latitude', latitude);
-                apiUrl.searchParams.append('longitude', longitude);
-                apiUrl.searchParams.append('current', 'temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day');
-                apiUrl.searchParams.append('hourly', 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m');
-                apiUrl.searchParams.append('daily', 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max');
-                apiUrl.searchParams.append('timezone', 'Europe/Helsinki');
-                apiUrl.searchParams.append('forecast_days', '7');
-                apiUrl.searchParams.append('windspeed_unit', 'ms');
-                
-                // Fetch data from API
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Weather API error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Display the weather data
-                displayHourlyForecast(data);
-                displayDailyForecast(data);
-                
-                weatherLoading.style.display = 'none';
-                hourlySection.style.display = 'block';
-                dailySection.style.display = 'block';
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-                weatherLoading.style.display = 'none';
-                weatherError.style.display = 'block';
-                weatherError.textContent = `Failed to load weather data: ${error.message}`;
-            }
-        }
+async function fuel() {
+  let ok = false;
+  try {
+    const r = await fetch(FUEL_API + '?latitude=61.5&longitude=23.79&radius=5000');
+    if (r.ok) {
+      const data = await r.json();
+      // the service reports distance in km
+      stations = (data.stations || []).map(s => ({ ...s, distance: (s.distance || 0) * 1000 }));
+      ok = stations.length > 0;
+    }
+  } catch (e) { /* shown as unavailable below */ }
+  $('fuelSample').hidden = ok;
+  $('fuelTabs').hidden = !ok;
+  $('fuelList').hidden = !ok;
+  $('fuelNote').textContent = ok ? 'cheapest first' : '';
+  if (ok) renderFuel();
+}
+$('fuelTabs').onclick = e => { const b = e.target.closest('button'); if (b) { fuelType = b.dataset.f; renderFuel(); } };
 
-        function displayHourlyForecast(data) {
-            const hourlyContainer = document.getElementById('hourlyForecast');
-            hourlyContainer.innerHTML = '';
-            
-            if (data.hourly) {
-                const now = new Date();
-                const currentHour = now.getHours();
-                
-                // Show next 12 hours starting from current hour
-                for (let i = 0; i < 12; i++) {
-                    const hourIndex = currentHour + i;
-                    if (hourIndex >= data.hourly.time.length) break;
-                    
-                    const time = new Date(data.hourly.time[hourIndex]);
-                    const temp = Math.round(data.hourly.temperature_2m[hourIndex]);
-                    const feelsLike = Math.round(data.hourly.apparent_temperature[hourIndex]);
-                    const weatherCode = data.hourly.weather_code[hourIndex];
-                    const windSpeed = Math.round(data.hourly.wind_speed_10m[hourIndex]);
-                    const windDirection = data.hourly.wind_direction_10m[hourIndex];
-                    const humidity = data.hourly.relative_humidity_2m[hourIndex];
-                    const isDay = time.getHours() >= 6 && time.getHours() <= 18;
-                    
-                    const hourlyItem = document.createElement('div');
-                    hourlyItem.className = 'hourly-item';
-                    
-                    const timeStr = i === 0 ? 'Now' : time.toLocaleTimeString('en', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: false 
-                    });
-                    
-                    hourlyItem.innerHTML = `
-                        <div class="hourly-time">${timeStr}</div>
-                        <div class="hourly-icon">${getWeatherIcon(weatherCode, isDay, true)}</div>
-                        <div class="hourly-temp">+${temp}°</div>
-                        <div class="hourly-feels">+${feelsLike}°</div>
-                        <div class="hourly-wind-speed">${windSpeed}m/s</div>
-                        <div class="hourly-wind-dir">${getWindDirectionArrow(windDirection)}</div>
-                        <div class="hourly-humidity">
-                            <span>💧</span>
-                            <span>${humidity}%</span>
-                        </div>
-                    `;
-                    
-                    hourlyContainer.appendChild(hourlyItem);
-                }
-            }
-        }
+async function version() {
+  try {
+    const v = await (await fetch('version.json', { cache: 'no-store' })).json();
+    $('ver').textContent = 'v' + v.version + ' · ';
+  } catch (e) { /* optional */ }
+}
 
-        function getWindDirectionArrow(degrees) {
-            // Convert wind direction to arrow pointing where wind is going
-            if (degrees >= 337.5 || degrees < 22.5) return '⬆️'; // North
-            else if (degrees >= 22.5 && degrees < 67.5) return '↗️'; // NE
-            else if (degrees >= 67.5 && degrees < 112.5) return '➡️'; // East
-            else if (degrees >= 112.5 && degrees < 157.5) return '↘️'; // SE
-            else if (degrees >= 157.5 && degrees < 202.5) return '⬇️'; // South
-            else if (degrees >= 202.5 && degrees < 247.5) return '↙️'; // SW
-            else if (degrees >= 247.5 && degrees < 292.5) return '⬅️'; // West
-            else if (degrees >= 292.5 && degrees < 337.5) return '↖️'; // NW
-            else return '❓';
-        }
-
-        function displayDailyForecast(data) {
-            const dailyContainer = document.getElementById('dailyForecast');
-            dailyContainer.innerHTML = '';
-            
-            if (data.daily) {
-                const today = new Date();
-                const dayNames = ['SU', 'MA', 'TI', 'KE', 'TO', 'PE', 'LA'];
-                
-                // Show 7 days starting from today
-                for (let i = 0; i < Math.min(7, data.daily.time.length); i++) {
-                    const date = new Date(data.daily.time[i]);
-                    const maxTemp = Math.round(data.daily.temperature_2m_max[i]);
-                    const minTemp = Math.round(data.daily.temperature_2m_min[i]);
-                    const weatherCode = data.daily.weather_code[i];
-                    const precipProb = data.daily.precipitation_probability_max[i] || 0;
-                    
-                    const dayAbbr = i === 0 ? 'Today' : dayNames[date.getDay()];
-                    const dateNum = date.getDate();
-                    const monthNum = date.getMonth() + 1;
-                    
-                    const dailyItem = document.createElement('div');
-                    dailyItem.className = 'daily-item';
-                    dailyItem.innerHTML = `
-                        <div class="daily-day">${dayAbbr}</div>
-                        <div class="daily-date">${dateNum}.${monthNum}.</div>
-                        <div class="daily-icon">${getWeatherIcon(weatherCode, true, true)}</div>
-                        <div class="daily-temps">
-                            <span class="daily-high">+${maxTemp}°</span>
-                            <span class="daily-low">+${minTemp}°</span>
-                        </div>
-                        <div class="daily-precipitation">
-                            <span>💧</span>
-                            <span>${precipProb}%</span>
-                        </div>
-                    `;
-                    
-                    dailyContainer.appendChild(dailyItem);
-                }
-            }
-        }
-
-        function getWeatherDescription(code) {
-            const weatherCodes = {
-                0: 'Clear sky',
-                1: 'Mainly clear',
-                2: 'Partly cloudy',
-                3: 'Overcast',
-                45: 'Fog',
-                48: 'Depositing rime fog',
-                51: 'Light drizzle',
-                53: 'Moderate drizzle',
-                55: 'Dense drizzle',
-                56: 'Light freezing drizzle',
-                57: 'Dense freezing drizzle',
-                61: 'Slight rain',
-                63: 'Moderate rain',
-                65: 'Heavy rain',
-                66: 'Light freezing rain',
-                67: 'Heavy freezing rain',
-                71: 'Slight snow fall',
-                73: 'Moderate snow fall',
-                75: 'Heavy snow fall',
-                77: 'Snow grains',
-                80: 'Slight rain showers',
-                81: 'Moderate rain showers',
-                82: 'Violent rain showers',
-                85: 'Slight snow showers',
-                86: 'Heavy snow showers',
-                95: 'Thunderstorm',
-                96: 'Thunderstorm with slight hail',
-                99: 'Thunderstorm with heavy hail'
-            };
-            
-            return weatherCodes[code] || `Unknown (${code})`;
-        }
-
-        function getWeatherIcon(code, isDay, isSmall = false) {
-            // Simple text-based icons based on weather code
-            const size = isSmall ? '1.2em' : '1.8em';
-            
-            // Map weather codes to unicode icons
-            if (code === 0) {
-                return isDay 
-                    ? `<span style="font-size:${size}; color:#FFD700;">☀️</span>` // Clear sky day
-                    : `<span style="font-size:${size}; color:#E0E0E0;">🌙</span>`; // Clear sky night
-            } else if (code === 1 || code === 2) {
-                return isDay
-                    ? `<span style="font-size:${size}; color:#FFD700;">⛅</span>` // Partly cloudy day
-                    : `<span style="font-size:${size}; color:#E0E0E0;">☁️</span>`; // Partly cloudy night
-            } else if (code === 3) {
-                return `<span style="font-size:${size}; color:#A9A9A9;">☁️</span>`; // Overcast
-            } else if (code === 45 || code === 48) {
-                return `<span style="font-size:${size}; color:#D3D3D3;">🌫️</span>`; // Fog
-            } else if (code >= 51 && code <= 57) {
-                return `<span style="font-size:${size}; color:#ADD8E6;">🌧️</span>`; // Drizzle
-            } else if (code >= 61 && code <= 67) {
-                return `<span style="font-size:${size}; color:#4682B4;">🌧️</span>`; // Rain
-            } else if (code >= 71 && code <= 77) {
-                return `<span style="font-size:${size}; color:#E0FFFF;">❄️</span>`; // Snow
-            } else if (code >= 80 && code <= 82) {
-                return `<span style="font-size:${size}; color:#4682B4;">🌦️</span>`; // Rain showers
-            } else if (code >= 85 && code <= 86) {
-                return `<span style="font-size:${size}; color:#E0FFFF;">🌨️</span>`; // Snow showers
-            } else if (code >= 95) {
-                return `<span style="font-size:${size}; color:#B22222;">⛈️</span>`; // Thunderstorm
-            } else {
-                return `<span style="font-size:${size}; color:#808080;">❓</span>`; // Unknown
-            }
-        }
-
-        // Geolocation Functions
-        function checkUserLocation() {
-            // Check if we already have the user's location stored
-            const hasStoredLocation = localStorage.getItem('userLat') && localStorage.getItem('userLon');
-            
-            if (!hasStoredLocation) {
-                // If no stored location, try to get it automatically
-                getUserLocation();
-            } else {
-                // Update the location display
-                const lat = localStorage.getItem('userLat');
-                const lon = localStorage.getItem('userLon');
-                const locationName = localStorage.getItem('userLocationName') || 'Your Location';
-                document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
-            }
-        }
-        
-        function getUserLocation() {
-            if (navigator.geolocation) {
-                document.getElementById('userLocation').textContent = 'Detecting location...';
-                
-                navigator.geolocation.getCurrentPosition(
-                    // Success callback
-                    function(position) {
-                        const latitude = position.coords.latitude.toString();
-                        const longitude = position.coords.longitude.toString();
-                        
-                        // Store the location in localStorage
-                        localStorage.setItem('userLat', latitude);
-                        localStorage.setItem('userLon', longitude);
-                        
-                        // Try to get location name using reverse geocoding
-                        reverseGeocode(latitude, longitude);
-                        
-                        // Update weather with new location
-                        fetchWeatherData();
-                        
-                        // Dispatch event to notify other components that location was updated
-                        document.dispatchEvent(new CustomEvent('userLocationUpdated'));
-                    },
-                    // Error callback
-                    function(error) {
-                        console.error('Geolocation error:', error);
-                        document.getElementById('userLocation').textContent = 'Location detection failed';
-                        
-                        // Fall back to default location
-                        if (!localStorage.getItem('userLat')) {
-                            localStorage.setItem('userLat', '61.4937');
-                            localStorage.setItem('userLon', '23.8283');
-                            localStorage.setItem('userLocationName', 'Tampere, Kissanmaa');
-                        }
-                    },
-                    // Options
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                document.getElementById('userLocation').textContent = 'Geolocation not supported';
-            }
-        }
-        
-        async function reverseGeocode(lat, lon) {
-            try {
-                // Use OpenStreetMap Nominatim for reverse geocoding
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
-                const data = await response.json();
-                
-                // Extract location name
-                let locationName = 'Unknown Location';
-                
-                if (data.address) {
-                    if (data.address.city) {
-                        locationName = data.address.city;
-                    } else if (data.address.town) {
-                        locationName = data.address.town;
-                    } else if (data.address.village) {
-                        locationName = data.address.village;
-                    }
-                    
-                    // Add suburb/neighborhood if available
-                    if (data.address.suburb) {
-                        locationName += `, ${data.address.suburb}`;
-                    } else if (data.address.neighbourhood) {
-                        locationName += `, ${data.address.neighbourhood}`;
-                    }
-                }
-                
-                // Store and display the location name
-                localStorage.setItem('userLocationName', locationName);
-                document.getElementById('userLocation').textContent = `${locationName} (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
-                document.getElementById('weatherLocationTitle').textContent = `Today's Weather in ${locationName}`;
-                
-            } catch (error) {
-                console.error('Reverse geocoding error:', error);
-                document.getElementById('userLocation').textContent = `Location (${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)})`;
-            }
-        }
-    </script>
+load(); weather(); fuel(); version();
+setInterval(() => { if (hours.length) render(); }, 60e3);       // keep "now" on the right hour
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+</script>
 </body>
-
 </html>
