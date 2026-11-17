@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.6.1...v1.7.0) (2026-11-17)
+
+
+### Features
+
+* price-first redesign of the front page ([b24afb3](https://github.com/EeroVakiparta/pikatchuprice/commit/b24afb33bad22b55dd72ee79cafab9e567fe6074))
+
 ## [1.6.1](https://github.com/EeroVakiparta/pikatchuprice/compare/v1.6.0...v1.6.1) (2025-05-30)
 
 
